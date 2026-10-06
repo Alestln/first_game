@@ -60,7 +60,7 @@ func update_state(direction: float) -> void:
 
 func play_animation() -> void:
 	match current_state:
-		State.IDLE:
+		State.IDLE: 
 			animated_sprite.play("idle")
 		State.RUN:
 			animated_sprite.play("run")
