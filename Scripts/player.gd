@@ -1,7 +1,9 @@
+class_name Player
 extends CharacterBody2D
 
 @export var SPEED: float = 300.0
 @export var JUMP_VELOCITY: float = -400.0
+@export var animated_sprite: AnimatedSprite2D
 
 enum State {
 	IDLE,
@@ -13,8 +15,10 @@ enum State {
 var current_state: State = State.IDLE
 
 var gravity: float = ProjectSettings.get_setting("physics/2d/default_gravity")
+var coins: int = 0
 
-@export var animated_sprite: AnimatedSprite2D
+func _process(delta: float) -> void:
+	print(coins)
 
 func _physics_process(delta: float) -> void:
 	apply_gravity(delta)
