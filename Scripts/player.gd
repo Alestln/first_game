@@ -1,7 +1,7 @@
 extends CharacterBody2D
 
-const SPEED: float = 300.0
-const JUMP_VELOCITY: float = -400.0
+@export var SPEED: float = 300.0
+@export var JUMP_VELOCITY: float = -400.0
 
 enum State {
 	IDLE,
@@ -14,7 +14,7 @@ var current_state: State = State.IDLE
 
 var gravity: float = ProjectSettings.get_setting("physics/2d/default_gravity")
 
-@onready var animated_sprite: AnimatedSprite2D = $AnimatedSprite
+@export var animated_sprite: AnimatedSprite2D
 
 func _physics_process(delta: float) -> void:
 	apply_gravity(delta)
@@ -60,7 +60,7 @@ func update_state(direction: float) -> void:
 
 func play_animation() -> void:
 	match current_state:
-		State.IDLE: 
+		State.IDLE:
 			animated_sprite.play("idle")
 		State.RUN:
 			animated_sprite.play("run")
