@@ -200,6 +200,7 @@ animations = [{
 size = Vector2(16, 24)
 
 [node name="Player" type="CharacterBody2D" unique_id=1713449004]
+collision_layer = 2
 script = ExtResource("1_qlg0r")
 
 [node name="AnimatedSprite" type="AnimatedSprite2D" parent="." unique_id=1516518533]
