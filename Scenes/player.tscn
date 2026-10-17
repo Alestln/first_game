@@ -1,6 +1,6 @@
 [gd_scene format=3 uid="uid://8p1yvuc4go0h"]
 
-[ext_resource type="Script" uid="uid://b6jkncctloi36" path="res://Scripts/player.gd" id="1_qlg0r"]
+[ext_resource type="Script" uid="uid://b8kq6wkjxb37h" path="res://Scripts/player.gd" id="1_qlg0r"]
 [ext_resource type="Texture2D" uid="uid://baqfga8jhdow1" path="res://assets/animations/pink_man/fall.png" id="2_tuyoq"]
 [ext_resource type="Texture2D" uid="uid://cj4l77nlot6qa" path="res://assets/animations/pink_man/idle.png" id="3_fjrip"]
 [ext_resource type="Texture2D" uid="uid://d3odua6nho13i" path="res://assets/animations/pink_man/jump.png" id="4_smehm"]
@@ -199,9 +199,10 @@ animations = [{
 [sub_resource type="RectangleShape2D" id="RectangleShape2D_wwt87"]
 size = Vector2(16, 24)
 
-[node name="Player" type="CharacterBody2D" unique_id=1713449004]
+[node name="Player" type="CharacterBody2D" unique_id=1713449004 node_paths=PackedStringArray("animated_sprite")]
 collision_layer = 2
 script = ExtResource("1_qlg0r")
+animated_sprite = NodePath("AnimatedSprite")
 
 [node name="AnimatedSprite" type="AnimatedSprite2D" parent="." unique_id=1516518533]
 sprite_frames = SubResource("SpriteFrames_0lyci")
