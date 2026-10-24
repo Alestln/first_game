@@ -8,6 +8,7 @@
 [ext_resource type="Texture2D" path="res://assets/backgrounds/parallax_backgrounds/mountains/mountains_far.png" id="6_far"]
 [ext_resource type="Texture2D" path="res://assets/backgrounds/parallax_backgrounds/mountains/mountains_near.png" id="7_near"]
 [ext_resource type="Script" path="res://scripts/intro_camera.gd" id="8_intro"]
+[ext_resource type="Script" path="res://scripts/camera_room.gd" id="9_room"]
 
 [sub_resource type="TileSetAtlasSource" id="TileSetAtlasSource_5a7ea"]
 texture = ExtResource("1_go701")
@@ -124,6 +125,9 @@ _data = {
 "tilts": PackedFloat32Array(0, 0, 0, 0)
 }
 point_count = 4
+
+[sub_resource type="RectangleShape2D" id="RectangleShape2D_room"]
+size = Vector2(512, 400)
 
 [node name="World" type="Node2D" unique_id=635685941]
 
@@ -251,3 +255,20 @@ loop = false
 limit_left = 0
 limit_right = 2416
 limit_bottom = 384
+
+[node name="CameraRoom" type="Area2D" parent="." node_paths=PackedStringArray("room_camera", "player_camera")]
+position = Vector2(2160, 94)
+collision_layer = 4
+collision_mask = 2
+script = ExtResource("9_room")
+room_camera = NodePath("RoomCamera")
+player_camera = NodePath("../Player/Camera")
+
+[node name="CollisionShape" type="CollisionShape2D" parent="CameraRoom"]
+shape = SubResource("RectangleShape2D_room")
+
+[node name="RoomCamera" type="Camera2D" parent="CameraRoom"]
+position = Vector2(-64, 110)
+
+[connection signal="body_entered" from="CameraRoom" to="CameraRoom" method="_on_body_entered"]
+[connection signal="body_exited" from="CameraRoom" to="CameraRoom" method="_on_body_exited"]
