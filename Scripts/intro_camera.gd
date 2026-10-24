@@ -19,6 +19,18 @@ extends Path2D
 func _ready() -> void:
 	if skip_intro:
 		return
+	
+	# Автопоиск игрока и его камеры, если они не заданы вручную в инспекторе
+	if not player:
+		player = get_tree().get_first_node_in_group("player") as Player
+	if not player_camera and player:
+		player_camera = player.find_child("Camera") as Camera2D
+		if not player_camera:
+			player_camera = player.get_node_or_null("Camera2D")
+			
+	if not player or not player_camera:
+		return
+		
 	play_intro()
 
 

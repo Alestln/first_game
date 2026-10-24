@@ -19,6 +19,9 @@ var coins: int = 0
 ## Можно ли управлять игроком (выключаем во время катсцен)
 var can_move: bool = true
 
+func _ready() -> void:
+	add_to_group("player")
+
 func _process(delta: float) -> void:
 	print(coins)
 
