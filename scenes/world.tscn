@@ -3,6 +3,7 @@
 [ext_resource type="Texture2D" uid="uid://3aak82msx72u" path="res://assets/tilesets/terrain (16x16).png" id="1_go701"]
 [ext_resource type="PackedScene" uid="uid://8p1yvuc4go0h" path="res://scenes/player.tscn" id="2_go701"]
 [ext_resource type="PackedScene" uid="uid://yfsd1w4reptb" path="res://scenes/coin.tscn" id="3_5a7ea"]
+[ext_resource type="Texture2D" path="res://assets/backgrounds/parallax_backgrounds/mountains/sky.png" id="4_sky"]
 
 [sub_resource type="TileSetAtlasSource" id="TileSetAtlasSource_5a7ea"]
 texture = ExtResource("1_go701")
@@ -114,6 +115,20 @@ terrain_set_0/terrain_0/color = Color(0.5356537, 0.22086379, 0.636065, 1)
 sources/1 = SubResource("TileSetAtlasSource_5a7ea")
 
 [node name="World" type="Node2D" unique_id=635685941]
+
+[node name="SkyLayer" type="CanvasLayer" parent="."]
+layer = -10
+
+[node name="Sky" type="TextureRect" parent="SkyLayer"]
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
+mouse_filter = 2
+texture = ExtResource("4_sky")
+expand_mode = 1
+stretch_mode = 6
 
 [node name="TileMapLayers" type="Node2D" parent="." unique_id=447153664]
 
