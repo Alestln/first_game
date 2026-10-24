@@ -3,10 +3,10 @@
 [ext_resource type="Texture2D" uid="uid://3aak82msx72u" path="res://assets/tilesets/terrain (16x16).png" id="1_go701"]
 [ext_resource type="PackedScene" uid="uid://8p1yvuc4go0h" path="res://scenes/player.tscn" id="2_go701"]
 [ext_resource type="PackedScene" uid="uid://yfsd1w4reptb" path="res://scenes/coin.tscn" id="3_5a7ea"]
-[ext_resource type="Texture2D" path="res://assets/backgrounds/parallax_backgrounds/mountains/sky.png" id="4_sky"]
-[ext_resource type="Texture2D" path="res://assets/backgrounds/parallax_backgrounds/mountains/clouds.png" id="5_clouds"]
-[ext_resource type="Texture2D" path="res://assets/backgrounds/parallax_backgrounds/mountains/mountains_far.png" id="6_far"]
-[ext_resource type="Texture2D" path="res://assets/backgrounds/parallax_backgrounds/mountains/mountains_near.png" id="7_near"]
+[ext_resource type="Texture2D" uid="uid://w2fooh74bp7k" path="res://assets/backgrounds/parallax_backgrounds/mountains/sky.png" id="4_sky"]
+[ext_resource type="Texture2D" uid="uid://dac0nt88ueew6" path="res://assets/backgrounds/parallax_backgrounds/mountains/clouds.png" id="5_clouds"]
+[ext_resource type="Texture2D" uid="uid://dhuuchwv2lxwv" path="res://assets/backgrounds/parallax_backgrounds/mountains/mountains_far.png" id="6_far"]
+[ext_resource type="Texture2D" uid="uid://gecifhq7eu5f" path="res://assets/backgrounds/parallax_backgrounds/mountains/mountains_near.png" id="7_near"]
 [ext_resource type="Script" path="res://scripts/intro_camera.gd" id="8_intro"]
 [ext_resource type="Script" path="res://scripts/camera_room.gd" id="9_room"]
 [ext_resource type="Script" path="res://scripts/game_camera.gd" id="10_cam"]
@@ -131,10 +131,10 @@ size = Vector2(512, 400)
 
 [node name="World" type="Node2D" unique_id=635685941]
 
-[node name="SkyLayer" type="CanvasLayer" parent="."]
+[node name="SkyLayer" type="CanvasLayer" parent="." unique_id=1053180303]
 layer = -10
 
-[node name="Sky" type="TextureRect" parent="SkyLayer"]
+[node name="Sky" type="TextureRect" parent="SkyLayer" unique_id=2128291048]
 anchors_preset = 15
 anchor_right = 1.0
 anchor_bottom = 1.0
@@ -145,35 +145,35 @@ texture = ExtResource("4_sky")
 expand_mode = 1
 stretch_mode = 6
 
-[node name="Parallax" type="Node2D" parent="."]
+[node name="Parallax" type="Node2D" parent="." unique_id=243504129]
 
-[node name="Clouds" type="Parallax2D" parent="Parallax"]
+[node name="Clouds" type="Parallax2D" parent="Parallax" unique_id=152834982]
 scroll_scale = Vector2(0.1, 1)
 repeat_size = Vector2(640, 0)
 autoscroll = Vector2(-8, 0)
 repeat_times = 2
 
-[node name="Sprite" type="Sprite2D" parent="Parallax/Clouds"]
+[node name="Sprite" type="Sprite2D" parent="Parallax/Clouds" unique_id=1648545303]
 position = Vector2(0, -60)
 texture = ExtResource("5_clouds")
 centered = false
 
-[node name="MountainsFar" type="Parallax2D" parent="Parallax"]
+[node name="MountainsFar" type="Parallax2D" parent="Parallax" unique_id=1597996101]
 scroll_scale = Vector2(0.2, 1)
 repeat_size = Vector2(640, 0)
 repeat_times = 2
 
-[node name="Sprite" type="Sprite2D" parent="Parallax/MountainsFar"]
+[node name="Sprite" type="Sprite2D" parent="Parallax/MountainsFar" unique_id=982121420]
 position = Vector2(0, -60)
 texture = ExtResource("6_far")
 centered = false
 
-[node name="MountainsNear" type="Parallax2D" parent="Parallax"]
+[node name="MountainsNear" type="Parallax2D" parent="Parallax" unique_id=1306679358]
 scroll_scale = Vector2(0.5, 1)
 repeat_size = Vector2(640, 0)
 repeat_times = 2
 
-[node name="Sprite" type="Sprite2D" parent="Parallax/MountainsNear"]
+[node name="Sprite" type="Sprite2D" parent="Parallax/MountainsNear" unique_id=1115677205]
 position = Vector2(0, -60)
 texture = ExtResource("7_near")
 centered = false
@@ -253,8 +253,6 @@ loop = false
 [node name="IntroCamera" type="Camera2D" parent="IntroPath/PathFollow" unique_id=571227505]
 limit_left = 0
 limit_right = 2416
-limit_bottom = 384
-
 limit_bottom = 384
 
 [node name="CameraRoom" type="Area2D" parent="." unique_id=246762824]
