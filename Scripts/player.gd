@@ -16,6 +16,8 @@ var current_state: State = State.IDLE
 
 var gravity: float = ProjectSettings.get_setting("physics/2d/default_gravity")
 var coins: int = 0
+## Можно ли управлять игроком (выключаем во время катсцен)
+var can_move: bool = true
 
 func _process(delta: float) -> void:
 	print(coins)
@@ -25,6 +27,8 @@ func _physics_process(delta: float) -> void:
 	handle_jump()
 	
 	var direction: float = Input.get_axis("move_left", "move_right")
+	if not can_move:
+		direction = 0.0
 	handle_movement(direction)
 	
 	move_and_slide()
@@ -38,7 +42,7 @@ func apply_gravity(delta: float) -> void:
 		velocity.y += gravity * delta
 
 func handle_jump() -> void:
-	if Input.is_action_just_pressed("jump") and is_on_floor():
+	if Input.is_action_just_pressed("jump") and is_on_floor() and can_move:
 		velocity.y = JUMP_VELOCITY
 
 func handle_movement(direction: float) -> void:

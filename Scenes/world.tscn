@@ -7,6 +7,7 @@
 [ext_resource type="Texture2D" path="res://assets/backgrounds/parallax_backgrounds/mountains/clouds.png" id="5_clouds"]
 [ext_resource type="Texture2D" path="res://assets/backgrounds/parallax_backgrounds/mountains/mountains_far.png" id="6_far"]
 [ext_resource type="Texture2D" path="res://assets/backgrounds/parallax_backgrounds/mountains/mountains_near.png" id="7_near"]
+[ext_resource type="Script" path="res://scripts/intro_camera.gd" id="8_intro"]
 
 [sub_resource type="TileSetAtlasSource" id="TileSetAtlasSource_5a7ea"]
 texture = ExtResource("1_go701")
@@ -116,6 +117,13 @@ terrain_set_0/mode = 0
 terrain_set_0/terrain_0/name = "Ground"
 terrain_set_0/terrain_0/color = Color(0.5356537, 0.22086379, 0.636065, 1)
 sources/1 = SubResource("TileSetAtlasSource_5a7ea")
+
+[sub_resource type="Curve2D" id="Curve2D_intro"]
+_data = {
+"points": PackedVector2Array(0, 0, -200, 0, 2096, 204, 200, 0, -200, 0, 1600, 140, 200, 0, -200, 0, 1000, 204, 150, 0, 0, 0, 520, 204),
+"tilts": PackedFloat32Array(0, 0, 0, 0)
+}
+point_count = 4
 
 [node name="World" type="Node2D" unique_id=635685941]
 
@@ -227,3 +235,19 @@ limit_smoothed = true
 position_smoothing_enabled = true
 position_smoothing_speed = 5.0
 drag_vertical_enabled = true
+
+[node name="IntroPath" type="Path2D" parent="." node_paths=PackedStringArray("player", "player_camera")]
+curve = SubResource("Curve2D_intro")
+script = ExtResource("8_intro")
+player = NodePath("../Player")
+player_camera = NodePath("../Player/Camera")
+
+[node name="PathFollow" type="PathFollow2D" parent="IntroPath"]
+position = Vector2(2096, 204)
+rotates = false
+loop = false
+
+[node name="IntroCamera" type="Camera2D" parent="IntroPath/PathFollow"]
+limit_left = 0
+limit_right = 2416
+limit_bottom = 384
