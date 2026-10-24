@@ -2,34 +2,36 @@
 **Формат:** LiveCode-практикум для детей (10–15 лет)  
 **Продолжительность:** 60–90 минут  
 **Движок:** Godot 4.3+ (2D Platformer)  
-**Ветка проекта с готовыми шагами:** `lesson/camera-background`
+**Ветка проекта:** `lesson/camera-background`
 
 ---
 
 ## 🧭 Как преподавателю вести занятие по шагам (Git-теги)
-В репозитории проекта каждый шаг зафиксирован в отдельном коммите с тегом. Если на уроке кто-то отстал или нужно быстро показать «как должно быть», вы можете переключиться на нужный этап:
+В репозитории проекта каждый ключевой шаг зафиксирован в отдельном коммите с тегом. Если на уроке кто-то отстал или нужно быстро показать «как должно быть», вы можете переключиться на нужный этап:
 
 ```bash
 git checkout step-1-screen       # Шаг 1: Настройки экрана (640x360, масштабирование, пиксельный снэп)
 git checkout step-2-static-bg    # Шаг 2: Статический фон (CanvasLayer + TextureRect)
 git checkout step-3-parallax     # Шаг 3: Параллакс (3 слоя Parallax2D + автоскролл облаков)
 git checkout step-4-camera       # Шаг 4: Камера игрока (плавность, границы, синхронизация с физикой)
-git checkout step-5-intro        # Шаг 5: Кинематографичный облёт уровня на старте (Path2D + Tween)
-git checkout step-6-room         # Шаг 6: Статичная комната с плавным входом и выходом (CameraRoom)
+git checkout step-5-intro        # Шаг 5: Кинематографичный облёт уровня на старте (Path2D)
+git checkout step-6-room         # Шаг 6: Статичная комната с бесшовным переходом
 git checkout step-7-shake        # Шаг 7: Универсальная тряска экрана (GameCamera.shake_current)
 ```
+*Вернуться к финальной версии:* `git checkout lesson/camera-background`
 
 ---
 
 ## ⏱️ Тайминг занятия
 - **00:00 – 00:05 (5 мин)** — Вводная интрига: «Почему игра выглядит плоской?»
-- **00:05 – 00:20 (15 мин)** — Блок 1. Настройка экрана и пикселей: чиним размытие при ходьбе
+- **00:05 – 00:20 (15 мин)** — Блок 1. Настройка экрана и пикселей: устраняем размытие при ходьбе
 - **00:20 – 00:35 (15 мин)** — Блок 2. Статический фон: разбор типичной ошибки с `TextureRect`
 - **00:35 – 00:50 (15 мин)** — Блок 3. Параллаксный фон: создаем иллюзию 3D в 2D
-- **00:50 – 01:05 (15 мин)** — Блок 4. Камера2D: «оператор на пружинке», границы и синхронизация физики
-- **01:05 – 01:20 (15 мин)** — Блок 5. Режиссерский пролет камеры перед стартом уровня
-- **01:20 – 01:30 (10 мин)** — Блок 6. Секретная комната: плавный вход И плавный выход
-- **01:30 – 01:35 (5 мин)** — Блок 7. Универсальная тряска камеры + итоги и челленджи
+- **00:50 – 01:05 (15 мин)** — Блок 4. Единая кинематографичная камера (`GameCamera`): плавность, границы, синхронизация
+- **01:05 – 01:15 (10 мин)** — Блок 5. Режиссерский пролет камеры перед стартом уровня
+- **01:15 – 01:25 (10 мин)** — Блок 6. Секретные комнаты: фиксация ракурса без скачков и швов
+- **01:25 – 01:30 (5 мин)** — Блок 7. Универсальная тряска камеры при сборе монетки
+- **01:30 – 01:35 (5 мин)** — Итоги, рефлексия, домашний челлендж
 
 ---
 
@@ -40,7 +42,7 @@ git checkout step-7-shake        # Шаг 7: Универсальная тряс
 > *2. За границами платформ — серая пустота.*  
 > *3. Камера прибита к персонажу гвоздями — каждое резкое движение бьет по глазам.*  
 > *4. Фон плоский: двигаемся мы, а за нами ничего не оживает.*  
-> *Сегодня мы превратимся в кинорежиссёров и профессиональных разработчиков: настроим экран без размытия, сделаем живой многослойный параллакс, научим камеру летать над уровнем и сделаем универсальную систему комнат!»*
+> *Сегодня мы превратимся в кинорежиссёров и профессиональных разработчиков: настроим экран без размытия, сделаем живой многослойный параллакс, научим камеру летать над уровнем и построим универсальную систему комнат!»*
 
 ---
 
@@ -48,11 +50,11 @@ git checkout step-7-shake        # Шаг 7: Универсальная тряс
 
 ### 1.1. Проблема №1: Маленький персонаж на огромном экране
 > **Вопрос детям:** *«Если мы делаем пиксельную игру со спрайтами 16×16 пикселей на экране Full HD (1920×1080), какого размера будет наш герой?»*  
-> **Ответ:** *«Он будет размером с ноготь мизинца! Поэтому игре нужен свой маленький виртуальный холст, который потом увеличивается на весь монитор».*
+> **Ответ:** *«Он будет размером с ноготь мизинца! Поэтому игре нужен свой компактный виртуальный холст, который затем пропорционально увеличивается на весь монитор».*
 
 ### 1.2. Проблема №2: Размытие спрайта при движении (Субпиксели)
 > **Секрет для преподавателя и детей:**  
-> *«Почему при беге персонажа пиксели размываются? Потому что скорость персонажа — это дробные числа: например, позиция 124.37 пикселя! Монитор не умеет рисовать пол-пикселя, он пытается смешать цвета соседних точек, и картинка становится "мыльной" или дрожит. Чтобы это вылечить, мы включим принудительное округление до целых пикселей (Pixel Snap)!»*
+> *«Почему при беге персонажа пиксели размываются? Потому что скорость персонажа — это дробные числа: например, координата 124.37 пикселя! Экран не умеет рисовать "половинку" пикселя — он пытается смешать цвета соседних точек, и картинка становится "мыльной" или дрожит. Чтобы это вылечить, мы включим принудительное округление до целых пикселей (Pixel Snap)!»*
 
 ### 1.3. Действие в Godot:
 Открываем: **Проект (Project) ➔ Настройки проекта (Project Settings)**.
@@ -72,7 +74,7 @@ git checkout step-7-shake        # Шаг 7: Универсальная тряс
    - **`Snap 2D Transforms to Pixel`** = **ON (`true`)**
    - **`Snap 2D Vertices to Pixel`** = **ON (`true`)**
 5. **Фильтрация текстур (Rendering ➔ Textures ➔ Canvas Textures)**:
-   - **`Default Texture Filter`** = **Nearest** (никакого размытия).
+   - **`Default Texture Filter`** = **Nearest** (никакого сглаживания пикселей).
 
 > **Демонстрация:** Запустите проект (`F5`), побегайте.  
 > **Показать детям:** Пиксели теперь всегда чёткие, как бритва! Никакого "мыла" при движении.
@@ -142,221 +144,203 @@ git checkout step-7-shake        # Шаг 7: Универсальная тряс
 
 ---
 
-## 🎥 Блок 4. Камера2D: «Оператор на пружинке» и границы (LiveCode)
+## 🎥 Блок 4. Единая кинематографичная камера (`GameCamera`)
 
-Выбираем узел `Player/Camera` (`Camera2D`).
+### 4.1. Архитектурный секрет: Почему нельзя переключать камеры в игре?
+> **Важнейший вопрос урока:**  
+> *«Многие новички пытаются ставить отдельную камеру на игрока, отдельную камеру в каждой комнате и переключать их через `make_current()`. Но что происходит, когда игрок бежит на полной скорости?  
+> Старая камера находится в одной точке, а новая — в другой. Экран резко прыгает (телепортируется), ломая все сглаживание!  
+> **Золотое правило геймдева:** В 2D игре должен быть **ОДИН главный оператор (GameCamera)**. Когда мы заходим в комнату, мы не меняем человека с камерой, мы просто просим оператора плавно подойти к центру комнаты. А когда выходим — оператор плавно возвращается за спину игрока!»*
 
-### 4.1. Синхронизация с физикой (Борьба с подергиванием)
-- В инспекторе камеры находим: **`Process Callback`** ➔ ставим **`Physics`** (значение `0`).
-- *Почему это важно:* Персонаж двигается в `_physics_process()`. Если камера обновляется отдельно в обычном `_process()`, они будут двигаться с разным темпом и персонаж начнет микро-вибрировать. Ставим `Physics` — и камера идеально шагает синхронно с физикой!
-
-### 4.2. Плавность (Position Smoothing)
-- Включаем: **`Position Smoothing ➔ Enabled = ON`**
-- **`Speed`** = `5.0` px/s.
-> **Объяснение детям:**  
-> *«Если выключено — камера прикручена к голове героя железным болтом. Включаем сглаживание — и камеру держит оператор, который плавно бежит вслед за игроком. Картинка становится мягкой и кинематографичной!»*
-
-### 4.3. Границы уровня (Limits) — спасаем от серой пустоты
-Узнаем ширину нашего уровня: уровень состоит из 151 тайла шириной 16 пикселей = **2416 пикселей**.
-- **`Limit Left`** = `0`
-- **`Limit Right`** = `2416`
-- **`Limit Bottom`** = `384` (дно уровня)
-- **`Limit Smoothed`** = `ON`
-
-> **Показать детям:** Подбегаем к левому краю уровня. Персонаж идет к стенке, но камера останавливается на границе 0 и больше не показывает черную пустоту за краем карты!
-
-### 4.4. Мертвая зона по вертикали (Drag Margin)
-- Включаем **`Drag ➔ Vertical Enabled = ON`**
-- Теперь при маленьких прыжках камера не дергается вверх-вниз, экономя зрение игрока.
-
----
-
-## 🚁 Блок 5. Режиссерский пролет камеры в начале уровня (LiveCode)
-
-### 5.1. Задача:
-В начале уровня камера стартует с конца карты (или от сундука/замка), плавно пролетает над всем уровнем, показывая препятствия, подлетает к герою и отдает ему управление.
-
-### 5.2. Устройство сцены:
-1. Создаем узел **`Path2D`** (называем `IntroPath`).
-2. В редакторе сверху выбираем инструмент «Перо» и рисуем кривую: от правого края уровня к спавну игрока.
-3. Дочерним узлом к `IntroPath` добавляем **`PathFollow2D`** (`rotates = false`, `loop = false`).
-4. Внутрь `PathFollow2D` добавляем вторую камеру — **`IntroCamera`** (`Camera2D`).
-5. Вешаем скрипт [scripts/intro_camera.gd](file:///c:/Users/Alestln/Godot%20Projects/first_game/scripts/intro_camera.gd):
-
-```gdscript
-extends Path2D
-
-@export var player: Player
-@export var player_camera: Camera2D
-@export var fly_time: float = 5.0      # Длительность полета по уровню
-@export var return_time: float = 1.5   # Длительность доводки до игрока
-@export var skip_intro: bool = false   # Чекбокс для быстрого тестирования
-
-@onready var path_follow: PathFollow2D = $PathFollow
-@onready var intro_camera: Camera2D = $PathFollow/IntroCamera
-
-func _ready() -> void:
-	if skip_intro:
-		return
-	
-	# Универсальный автопоиск: работает на ЛЮБОМ уровне, даже если забыли привязать в инспекторе!
-	if not player:
-		player = get_tree().get_first_node_in_group("player") as Player
-	if not player_camera and player:
-		player_camera = player.find_child("Camera") as Camera2D
-		
-	if not player or not player_camera:
-		return
-		
-	play_intro()
-
-func play_intro() -> void:
-	# 1. Отключаем кнопки управления у игрока
-	player.can_move = false
-	
-	# 2. Включаем камеру-оператора
-	intro_camera.make_current()
-	path_follow.progress_ratio = 0.0
-
-	# 3. Аниматор Tween везет тележку камеры от 0.0 до 1.0 (100% пути)
-	var fly_tween = create_tween().set_trans(Tween.TRANS_SINE).set_ease(Tween.EASE_IN_OUT)
-	fly_tween.tween_property(path_follow, "progress_ratio", 1.0, fly_time)
-	await fly_tween.finished
-
-	# 4. Плавно переводим фокус на игрока
-	var return_tween = create_tween().set_trans(Tween.TRANS_CUBIC).set_ease(Tween.EASE_IN_OUT)
-	return_tween.tween_property(intro_camera, "global_position", player_camera.get_screen_center_position(), return_time)
-	await return_tween.finished
-
-	# 5. Возвращаем камеру игрока и включаем управление
-	player_camera.make_current()
-	player_camera.reset_smoothing()
-	player.can_move = true
-```
-
----
-
-## 🏰 Блок 6. Секретная комната: плавный вход И плавный выход (LiveCode)
-
-### 6.1. Почему камера резко дергалась при выходе?
-> **Разбор ошибки:**  
-> *«Когда мы входили в комнату, камера плавно ехала через `Tween` — было красиво. Но при выходе мы делали просто `player_camera.make_current()`. Камера игрока моментально прыгала на 300 пикселей к персонажу за 1 кадр!  
-> **Решение:** При выходе из комнаты камера сначала должна плавно долететь обратно к игроку, и только когда она долетела — переключаться на игрока!»*
-
-### 6.2. Универсальный скрипт комнаты [scripts/camera_room.gd](file:///c:/Users/Alestln/Godot%20Projects/first_game/scripts/camera_room.gd):
-Скрипт полностью универсален: его можно повесить на любую `Area2D` с камерой на любом уровне без ручной привязки нод!
-
-```gdscript
-class_name CameraRoom
-extends Area2D
-
-@export var room_camera: Camera2D
-@export var player_camera: Camera2D
-@export var transition_time: float = 0.6
-
-var room_view_position: Vector2
-var active_tween: Tween
-var is_player_inside: bool = false
-
-func _ready() -> void:
-	# Автопоиск камеры комнаты, если не привязали в инспекторе
-	if not room_camera:
-		room_camera = get_node_or_null("RoomCamera") as Camera2D
-	if room_camera:
-		room_view_position = room_camera.global_position
-
-func _on_body_entered(body: Node2D) -> void:
-	if not (body is Player or body.is_in_group("player")):
-		return
-	is_player_inside = true
-
-	if not player_camera:
-		player_camera = get_viewport().get_camera_2d()
-	if not room_camera:
-		return
-
-	if active_tween and active_tween.is_valid():
-		active_tween.kill()
-
-	# Плавный въезд в комнату:
-	room_camera.global_position = player_camera.get_screen_center_position()
-	room_camera.make_current()
-	
-	active_tween = create_tween().set_trans(Tween.TRANS_CUBIC).set_ease(Tween.EASE_OUT)
-	active_tween.tween_property(room_camera, "global_position", room_view_position, transition_time)
-
-func _on_body_exited(body: Node2D) -> void:
-	if not (body is Player or body.is_in_group("player")):
-		return
-	is_player_inside = false
-
-	if not room_camera or not player_camera:
-		return
-
-	if active_tween and active_tween.is_valid():
-		active_tween.kill()
-
-	# ПЛАВНЫЙ ВЫЕЗД ИЗ КОМНАТЫ:
-	# Камера комнаты плавно летит назад к позиции игрока
-	active_tween = create_tween().set_trans(Tween.TRANS_CUBIC).set_ease(Tween.EASE_IN_OUT)
-	active_tween.tween_property(room_camera, "global_position", player_camera.global_position, transition_time)
-	await active_tween.finished
-
-	# И только когда камера долетела — переключаемся на игрока!
-	if not is_player_inside and is_instance_valid(player_camera):
-		player_camera.make_current()
-		player_camera.reset_smoothing()
-```
-
-> **Демонстрация:** Заходим в комнату справа — камера мягко показывает комнату. Выходим обратно — камера мягко скользит назад к герою. Никаких резких рывков!
-
----
-
-## 💥 Блок 7. Универсальная тряска экрана (Screen Shake)
-
-### 7.1. Как сделать код универсальным, чтобы не дублировать его в каждой сцене?
-Раньше монета искала камеру во вьюпорте: `get_viewport().get_camera_2d() as GameCamera`.  
-Если монету добавить в другую сцену без этой конкретной камеры, игра могла сломаться.
-
-**Универсальное архитектурное решение:**  
-Сделать в `GameCamera` **статический метод**: `GameCamera.shake_current(2.0)`.
+### 4.2. Как отвязать камеру от скейла игрока (`top_level = true`)
+Если персонаж увеличен (`scale = Vector2(2, 2)`), прикрепленная камера наследует этот скейл, вызывая дрожание.  
+Включаем **`top_level = true`** — камера живет в мировых координатах, не сжимается и не искажается, плавно следуя за игроком по формуле экспоненциального сглаживания.
 
 ### Скрипт [scripts/game_camera.gd](file:///c:/Users/Alestln/Godot%20Projects/first_game/scripts/game_camera.gd):
 ```gdscript
 class_name GameCamera
 extends Camera2D
 
-static var current_camera: GameCamera
+static var instance: GameCamera
 
+@export var follow_target: Node2D
+@export var follow_speed: float = 6.0
 @export var shake_decay: float = 20.0
+
+enum Mode { FOLLOW_PLAYER, LOCKED_TO_POINT, FOLLOW_NODE }
+
+var current_mode: Mode = Mode.FOLLOW_PLAYER
+var locked_position: Vector2 = Vector2.ZERO
+var target_node: Node2D = null
+var current_speed: float = 6.0
 var shake_strength: float = 0.0
 
 func _enter_tree() -> void:
-	add_to_group("cameras")
-	current_camera = self
+	instance = self
 
 func _exit_tree() -> void:
-	if current_camera == self:
-		current_camera = null
+	if instance == self:
+		instance = null
 
-## Универсальный метод — можно вызвать отовсюду в одну строчку:
-## GameCamera.shake_current(3.0)
+func _ready() -> void:
+	top_level = true # Полная независимость от скейла и родителя
+	scale = Vector2.ONE
+	
+	if not follow_target:
+		follow_target = get_tree().get_first_node_in_group("player") as Node2D
+	if follow_target:
+		global_position = follow_target.global_position
+
+# --- Универсальные методы вызова (из ЛЮБОГО скрипта в 1 строчку) ---
+
 static func shake_current(strength: float = 4.0) -> void:
-	if current_camera and is_instance_valid(current_camera):
-		current_camera.shake(strength)
+	if instance: instance.shake(strength)
+
+static func lock_to_position(target_pos: Vector2, speed: float = 4.0) -> void:
+	if instance: instance.set_locked_position(target_pos, speed)
+
+static func unlock_position(speed: float = 5.0) -> void:
+	if instance: instance.return_to_player(speed)
+
+static func lock_to_node(node: Node2D, speed: float = 100.0) -> void:
+	if instance: instance.set_target_node(node, speed)
+
+# --- Логика движения ---
 
 func shake(strength: float = 4.0) -> void:
 	shake_strength = max(shake_strength, strength)
 
-func _process(delta: float) -> void:
+func set_locked_position(target_pos: Vector2, speed: float = 4.0) -> void:
+	current_mode = Mode.LOCKED_TO_POINT
+	locked_position = target_pos
+	current_speed = speed
+
+func return_to_player(speed: float = 5.0) -> void:
+	current_mode = Mode.FOLLOW_PLAYER
+	current_speed = speed
+
+func set_target_node(node: Node2D, speed: float = 100.0) -> void:
+	current_mode = Mode.FOLLOW_NODE
+	target_node = node
+	current_speed = speed
+	if speed >= 50.0 and is_instance_valid(node):
+		global_position = node.global_position
+
+func _physics_process(delta: float) -> void:
+	# 1. Тряска через offset
 	if shake_strength > 0.0:
 		offset = Vector2(randf_range(-1.0, 1.0), randf_range(-1.0, 1.0)) * shake_strength
 		shake_strength = move_toward(shake_strength, 0.0, shake_decay * delta)
 	else:
 		offset = Vector2.ZERO
+
+	# 2. Выбор цели
+	var destination: Vector2
+	match current_mode:
+		Mode.LOCKED_TO_POINT:
+			destination = locked_position
+		Mode.FOLLOW_NODE:
+			destination = target_node.global_position if is_instance_valid(target_node) else global_position
+		Mode.FOLLOW_PLAYER:
+			destination = follow_target.global_position if is_instance_valid(follow_target) else global_position
+
+	# 3. Кинематографичное экспоненциальное сглаживание
+	var weight: float = 1.0 - exp(-current_speed * delta)
+	global_position = global_position.lerp(destination, weight)
 ```
 
-### Теперь в ЛЮБОМ объекте игры (монета, враг, сундук, шип):
+### 4.3. Границы уровня (Limits)
+В инспекторе `GameCamera`:
+- `limit_left` = `0`
+- `limit_right` = `2416`
+- `limit_bottom` = `384`
+
+---
+
+## 🚁 Блок 5. Режиссерский пролет камеры в начале уровня (LiveCode)
+
+### 5.1. Устройство в сцене:
+1. Создаем узел **`Path2D`** (называем `IntroPath`).
+2. В редакторе рисуем кривую от правого края уровня к спавну игрока.
+3. Дочерним узлом к `IntroPath` добавляем **`PathFollow2D`** (`rotates = false`, `loop = false`).
+4. Вешаем скрипт [scripts/intro_camera.gd](file:///c:/Users/Alestln/Godot%20Projects/first_game/scripts/intro_camera.gd):
+
+```gdscript
+extends Path2D
+
+@export var fly_time: float = 4.5
+@export var return_time: float = 1.5
+@export var skip_intro: bool = false
+
+@onready var path_follow: PathFollow2D = $PathFollow
+
+func _ready() -> void:
+	if skip_intro: return
+	play_intro()
+
+func play_intro() -> void:
+	var player: Player = get_tree().get_first_node_in_group("player") as Player
+	if player:
+		player.can_move = false
+
+	# 1. Говорим камере следовать за тележкой PathFollow
+	path_follow.progress_ratio = 0.0
+	GameCamera.lock_to_node(path_follow, 100.0)
+
+	# 2. Tween плавно везет тележку по кривой
+	var fly_tween = create_tween().set_trans(Tween.TRANS_SINE).set_ease(Tween.EASE_IN_OUT)
+	fly_tween.tween_property(path_follow, "progress_ratio", 1.0, fly_time)
+	await fly_tween.finished
+
+	# 3. Плавно возвращаем камеру к игроку
+	GameCamera.unlock_position(3.0)
+	await get_tree().create_timer(return_time).timeout
+
+	# 4. Отдаем управление
+	if player:
+		player.can_move = true
+```
+
+---
+
+## 🏰 Блок 6. Секретная комната: плавный вход И плавный выход (LiveCode)
+
+### 6.1. Почему теперь НЕТ резкого скачка при выходе?
+В отличие от старого подхода с двумя камерами:
+- При входе в комнату: `GameCamera.lock_to_position(target)` — камера плавно замедляется в центре комнаты.
+- При выходе из комнаты: `GameCamera.unlock_position(speed)` — камера **непрерывно преследует движущегося игрока**. Куда бы ни побежал персонаж, камера плавно скользит к нему. Никаких переключений `make_current()`, никаких телепортаций!
+
+### 6.2. Универсальный скрипт комнаты [scripts/camera_room.gd](file:///c:/Users/Alestln/Godot%20Projects/first_game/scripts/camera_room.gd):
+```gdscript
+class_name CameraRoom
+extends Area2D
+
+@export var view_point: Node2D
+@export var transition_speed: float = 4.0
+
+func _ready() -> void:
+	if not view_point:
+		view_point = get_node_or_null("ViewPoint")
+		if not view_point:
+			view_point = get_node_or_null("RoomCamera")
+
+func _on_body_entered(body: Node2D) -> void:
+	if body is Player or body.is_in_group("player"):
+		var target: Vector2 = view_point.global_position if view_point else global_position
+		GameCamera.lock_to_position(target, transition_speed)
+
+func _on_body_exited(body: Node2D) -> void:
+	if body is Player or body.is_in_group("player"):
+		GameCamera.unlock_position(transition_speed)
+```
+
+> **Универсальность:** Вы можете продублировать узел `CameraRoom` (`Ctrl + D`) 10 раз по уровню, задать разный размер `CollisionShape2D` и поставить точки обзора — **все комнаты заработают сразу без единой строчки нового кода!**
+
+---
+
+## 💥 Блок 7. Универсальная тряска экрана (Screen Shake)
+
+### В любом объекте игры (монеты, враги, ловушки):
 В [scripts/coin.gd](file:///c:/Users/Alestln/Godot%20Projects/first_game/scripts/coin.gd):
 ```gdscript
 func collect(player: Player) -> void:
@@ -364,31 +348,29 @@ func collect(player: Player) -> void:
 	collision_shape.set_deferred("disabled", true)
 	
 	player.coins += coin_value
-	GameCamera.shake_current(2.0) # <-- Всего одна универсальная строчка!
+	GameCamera.shake_current(2.0) # <-- Всего одна строчка в любом месте игры!
 	
 	animated_sprite.play("collect")
 	await animated_sprite.animation_finished
 	queue_free()
 ```
-Если на уровне появится враг, при его смерти пишем: `GameCamera.shake_current(4.0)`.  
-Если игрок упал в лаву: `GameCamera.shake_current(7.0)`.  
-Никаких связей между нодами!
 
 ---
 
 ## 💡 Шпаргалка типичных детских ошибок:
 
-| Ошибка у ученика | В чем причина | Как исправить |
+| Проблема | В чем причина | Как исправить |
 | :--- | :--- | :--- |
-| **Спрайт размывается при беге** | Не включен пиксельный снэп | В Project Settings включить `Snap 2D Transforms to Pixel` и у камеры `Process Callback = Physics`. |
-| **Камера не слушается и не двигается** | Забыли включить `Enabled` | Проверить галочку `Enabled` в инспекторе `Camera2D`. |
-| **Фон заслоняет персонажа** | Слой `CanvasLayer` выше уровня | У `CanvasLayer` поставить `Layer = -10` (минус десять). |
-| **Параллакс не повторяется** | Не задан `Repeat Size` | Указать ширину текстуры (например, `640`) в `Repeat Size` у `Parallax2D`. |
-| **Камера резко скачет** | `make_current()` вызван без плавного `Tween` | Использовать `CameraRoom` с анимацией возврата. |
+| **Спрайт размывается при беге** | Не включен пиксельный снэп | Включить `Snap 2D Transforms to Pixel` в Project Settings. |
+| **Камера резко скачет при выходе из комнаты** | Попытка переключить разные `Camera2D` | Использовать единую `GameCamera` и команду `unlock_position()`. |
+| **Фон заслоняет платформы** | Слой `CanvasLayer` имеет положительный номер | У `CanvasLayer` поставить `Layer = -10` (отрицательный). |
+| **Параллакс не зацикливается** | Не задан `Repeat Size` | Указать ширину картинки (например, `640`) в `Repeat Size` у `Parallax2D`. |
+| **Тряска смещает саму камеру** | Изменяют `position` вместо `offset` | Всегда трясти через `offset`: `offset = Vector2(rand, rand) * power`. |
 
 ---
 
-## 🏆 Итог занятия и домашнее задание:
-1. Запустить игру и насладиться сочной картинкой.
-2. **Задание 1:** Добавить новый слой облаков с другой скоростью автоскролла.
-3. **Задание 2:** Добавить на уровень вторую секретную комнату с помощью копирования узла `CameraRoom` (проверить, что код работает универсально без правок!).
+## 🏆 Домашний челлендж для учеников:
+1. Поменять скорость автоскролла облаков `autoscroll` (сделать медленнее или в другую сторону).
+2. Нарисовать свою причудливую траекторию полета камеры через точки кривой `Path2D`.
+3. Добавить вторую секретную комнату простым дублированием `CameraRoom`.
+4. Сделать силу тряски камеры больше при падении в пропасть.
