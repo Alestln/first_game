@@ -4,6 +4,9 @@
 [ext_resource type="PackedScene" uid="uid://8p1yvuc4go0h" path="res://scenes/player.tscn" id="2_go701"]
 [ext_resource type="PackedScene" uid="uid://yfsd1w4reptb" path="res://scenes/coin.tscn" id="3_5a7ea"]
 [ext_resource type="Texture2D" path="res://assets/backgrounds/parallax_backgrounds/mountains/sky.png" id="4_sky"]
+[ext_resource type="Texture2D" path="res://assets/backgrounds/parallax_backgrounds/mountains/clouds.png" id="5_clouds"]
+[ext_resource type="Texture2D" path="res://assets/backgrounds/parallax_backgrounds/mountains/mountains_far.png" id="6_far"]
+[ext_resource type="Texture2D" path="res://assets/backgrounds/parallax_backgrounds/mountains/mountains_near.png" id="7_near"]
 
 [sub_resource type="TileSetAtlasSource" id="TileSetAtlasSource_5a7ea"]
 texture = ExtResource("1_go701")
@@ -129,6 +132,39 @@ mouse_filter = 2
 texture = ExtResource("4_sky")
 expand_mode = 1
 stretch_mode = 6
+
+[node name="Parallax" type="Node2D" parent="."]
+
+[node name="Clouds" type="Parallax2D" parent="Parallax"]
+scroll_scale = Vector2(0.1, 1)
+repeat_size = Vector2(640, 0)
+autoscroll = Vector2(-8, 0)
+repeat_times = 2
+
+[node name="Sprite" type="Sprite2D" parent="Parallax/Clouds"]
+position = Vector2(0, -60)
+texture = ExtResource("5_clouds")
+centered = false
+
+[node name="MountainsFar" type="Parallax2D" parent="Parallax"]
+scroll_scale = Vector2(0.2, 1)
+repeat_size = Vector2(640, 0)
+repeat_times = 2
+
+[node name="Sprite" type="Sprite2D" parent="Parallax/MountainsFar"]
+position = Vector2(0, -60)
+texture = ExtResource("6_far")
+centered = false
+
+[node name="MountainsNear" type="Parallax2D" parent="Parallax"]
+scroll_scale = Vector2(0.5, 1)
+repeat_size = Vector2(640, 0)
+repeat_times = 2
+
+[node name="Sprite" type="Sprite2D" parent="Parallax/MountainsNear"]
+position = Vector2(0, -60)
+texture = ExtResource("7_near")
+centered = false
 
 [node name="TileMapLayers" type="Node2D" parent="." unique_id=447153664]
 
