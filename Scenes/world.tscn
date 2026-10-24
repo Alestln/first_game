@@ -9,6 +9,7 @@
 [ext_resource type="Texture2D" path="res://assets/backgrounds/parallax_backgrounds/mountains/mountains_near.png" id="7_near"]
 [ext_resource type="Script" path="res://scripts/intro_camera.gd" id="8_intro"]
 [ext_resource type="Script" path="res://scripts/camera_room.gd" id="9_room"]
+[ext_resource type="Script" path="res://scripts/game_camera.gd" id="10_cam"]
 
 [sub_resource type="TileSetAtlasSource" id="TileSetAtlasSource_5a7ea"]
 texture = ExtResource("1_go701")
@@ -232,6 +233,7 @@ JUMP_VELOCITY = -450.0
 
 [node name="Camera" type="Camera2D" parent="Player" unique_id=438829338]
 scale = Vector2(0.5, 0.5)
+script = ExtResource("10_cam")
 limit_left = 0
 limit_right = 2416
 limit_bottom = 384

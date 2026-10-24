@@ -16,6 +16,10 @@ func collect(player: Player) -> void:
 	
 	player.coins += coin_value
 	
+	var camera: GameCamera = get_viewport().get_camera_2d() as GameCamera
+	if camera:
+		camera.shake(2.0)
+	
 	animated_sprite.play("collect")
 	
 	await animated_sprite.animation_finished
