@@ -15,6 +15,7 @@ func collect(player: Player) -> void:
 	collision_shape.set_deferred("disabled", true)
 	
 	player.coins += coin_value
+	GameCamera.shake_current(3.0, 0.15)
 	
 	animated_sprite.play("collect")
 	
