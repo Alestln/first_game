@@ -2,7 +2,14 @@
 
 [ext_resource type="Texture2D" uid="uid://3aak82msx72u" path="res://assets/tilesets/terrain (16x16).png" id="1_go701"]
 [ext_resource type="PackedScene" uid="uid://8p1yvuc4go0h" path="res://scenes/player.tscn" id="2_go701"]
+[ext_resource type="Texture2D" uid="uid://dhuuchwv2lxwv" path="res://assets/backgrounds/parallax_backgrounds/mountains/mountains_far.png" id="2_i7141"]
+[ext_resource type="Texture2D" uid="uid://gecifhq7eu5f" path="res://assets/backgrounds/parallax_backgrounds/mountains/mountains_near.png" id="3_4mrxx"]
 [ext_resource type="PackedScene" uid="uid://yfsd1w4reptb" path="res://scenes/coin.tscn" id="3_5a7ea"]
+[ext_resource type="Texture2D" uid="uid://w2fooh74bp7k" path="res://assets/backgrounds/parallax_backgrounds/mountains/sky.png" id="4_sky"]
+[ext_resource type="Texture2D" uid="uid://dac0nt88ueew6" path="res://assets/backgrounds/parallax_backgrounds/mountains/clouds.png" id="5_clouds"]
+[ext_resource type="Script" uid="uid://dqxfwhmjfwxbe" path="res://scripts/game_camera.gd" id="7_4mrxx"]
+[ext_resource type="Script" uid="uid://dn54aforc37wk" path="res://scripts/intro_camera.gd" id="9_7r4gi"]
+[ext_resource type="Script" uid="uid://de6s2s3q08qx2" path="res://scripts/camera_room.gd" id="10_w7kh3"]
 
 [sub_resource type="TileSetAtlasSource" id="TileSetAtlasSource_5a7ea"]
 texture = ExtResource("1_go701")
@@ -113,7 +120,59 @@ terrain_set_0/terrain_0/name = "Ground"
 terrain_set_0/terrain_0/color = Color(0.5356537, 0.22086379, 0.636065, 1)
 sources/1 = SubResource("TileSetAtlasSource_5a7ea")
 
+[sub_resource type="Curve2D" id="Curve2D_w7kh3"]
+_data = {
+"points": PackedVector2Array(280.60605, -15.151514, -280.60605, 15.151514, 2096, 204, 134.54544, 2.4242423, -134.54544, -2.4242423, 1600, 140, 98.218445, -2.2578955, -98.218445, 2.2578955, 1000, 204, 0, 0, 0, 0, 520, 204)
+}
+point_count = 4
+
+[sub_resource type="RectangleShape2D" id="RectangleShape2D_wwt87"]
+size = Vector2(432, 259)
+
 [node name="World" type="Node2D" unique_id=635685941]
+
+[node name="SkyLayer" type="CanvasLayer" parent="." unique_id=1540596609]
+layer = -10
+
+[node name="Sky" type="TextureRect" parent="SkyLayer" unique_id=774031614]
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
+mouse_filter = 2
+texture = ExtResource("4_sky")
+expand_mode = 1
+stretch_mode = 6
+
+[node name="Parallax" type="Node2D" parent="." unique_id=1983085668]
+
+[node name="Clouds" type="Parallax2D" parent="Parallax" unique_id=594323461]
+scroll_scale = Vector2(0.1, 1)
+repeat_size = Vector2(640, 0)
+autoscroll = Vector2(8, 0)
+
+[node name="Sprite2D" type="Sprite2D" parent="Parallax/Clouds" unique_id=2015781910]
+texture = ExtResource("5_clouds")
+centered = false
+
+[node name="MountainsFar" type="Parallax2D" parent="Parallax" unique_id=392123788]
+scroll_scale = Vector2(0.2, 1)
+repeat_size = Vector2(640, 0)
+
+[node name="Sprite2D" type="Sprite2D" parent="Parallax/MountainsFar" unique_id=1363126481]
+position = Vector2(0, -60)
+texture = ExtResource("2_i7141")
+centered = false
+
+[node name="MountainsNear" type="Parallax2D" parent="Parallax" unique_id=640086154]
+scroll_scale = Vector2(0.5, 1)
+repeat_size = Vector2(640, 0)
+
+[node name="Sprite2D" type="Sprite2D" parent="Parallax/MountainsNear" unique_id=429771760]
+position = Vector2(0, -60)
+texture = ExtResource("3_4mrxx")
+centered = false
 
 [node name="TileMapLayers" type="Node2D" parent="." unique_id=447153664]
 
@@ -162,11 +221,46 @@ position = Vector2(1016, 160)
 [node name="Coin13" parent="Coins" unique_id=950229136 instance=ExtResource("3_5a7ea")]
 position = Vector2(1032, 208)
 
+[node name="IntroPath" type="Path2D" parent="." unique_id=484201222 node_paths=PackedStringArray("path_follow")]
+curve = SubResource("Curve2D_w7kh3")
+script = ExtResource("9_7r4gi")
+skip_intro = true
+path_follow = NodePath("PathFollow2D")
+
+[node name="PathFollow2D" type="PathFollow2D" parent="IntroPath" unique_id=601283099]
+position = Vector2(2096, 204)
+rotation = 3.0876493
+rotates = false
+loop = false
+
 [node name="Player" parent="." unique_id=1713449004 instance=ExtResource("2_go701")]
-position = Vector2(499, 192)
+position = Vector2(1949, 252)
 scale = Vector2(2, 2)
 JUMP_VELOCITY = -450.0
 
-[node name="Camera" type="Camera2D" parent="Player" unique_id=438829338]
+[node name="Camera" type="Camera2D" parent="Player" unique_id=438829338 node_paths=PackedStringArray("follow_target")]
 scale = Vector2(0.5, 0.5)
-zoom = Vector2(2, 2)
+process_callback = 0
+limit_left = 0
+limit_right = 2416
+limit_bottom = 384
+limit_smoothed = true
+position_smoothing_enabled = true
+script = ExtResource("7_4mrxx")
+follow_target = NodePath("..")
+
+[node name="CameraRoom" type="Area2D" parent="." unique_id=1935291766 node_paths=PackedStringArray("focus_point")]
+position = Vector2(2064, 144)
+collision_layer = 0
+collision_mask = 2
+script = ExtResource("10_w7kh3")
+focus_point = NodePath("Marker2D")
+
+[node name="CollisionShape2D" type="CollisionShape2D" parent="CameraRoom" unique_id=959119727]
+position = Vector2(-13, 18.5)
+shape = SubResource("RectangleShape2D_wwt87")
+
+[node name="Marker2D" type="Marker2D" parent="CameraRoom" unique_id=1510766202]
+
+[connection signal="body_entered" from="CameraRoom" to="CameraRoom" method="_on_body_entered"]
+[connection signal="body_exited" from="CameraRoom" to="CameraRoom" method="_on_body_exited"]
