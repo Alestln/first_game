@@ -10,6 +10,7 @@
 [ext_resource type="Script" uid="uid://dqxfwhmjfwxbe" path="res://scripts/game_camera.gd" id="7_4mrxx"]
 [ext_resource type="Script" uid="uid://dn54aforc37wk" path="res://scripts/intro_camera.gd" id="9_7r4gi"]
 [ext_resource type="Script" uid="uid://de6s2s3q08qx2" path="res://scripts/camera_room.gd" id="10_w7kh3"]
+[ext_resource type="Script" uid="uid://4xkw0h0mubj" path="res://scripts/camera_frame.gd" id="11_frame"]
 
 [sub_resource type="TileSetAtlasSource" id="TileSetAtlasSource_5a7ea"]
 texture = ExtResource("1_go701")
@@ -127,7 +128,7 @@ _data = {
 point_count = 4
 
 [sub_resource type="RectangleShape2D" id="RectangleShape2D_wwt87"]
-size = Vector2(432, 259)
+size = Vector2(590, 259)
 
 [node name="World" type="Node2D" unique_id=635685941]
 
@@ -224,7 +225,6 @@ position = Vector2(1032, 208)
 [node name="IntroPath" type="Path2D" parent="." unique_id=484201222 node_paths=PackedStringArray("path_follow")]
 curve = SubResource("Curve2D_w7kh3")
 script = ExtResource("9_7r4gi")
-skip_intro = true
 path_follow = NodePath("PathFollow2D")
 
 [node name="PathFollow2D" type="PathFollow2D" parent="IntroPath" unique_id=601283099]
@@ -238,29 +238,31 @@ position = Vector2(1949, 252)
 scale = Vector2(2, 2)
 JUMP_VELOCITY = -450.0
 
-[node name="Camera" type="Camera2D" parent="Player" unique_id=438829338 node_paths=PackedStringArray("follow_target")]
+[node name="Camera" type="Camera2D" parent="Player" unique_id=438829338 node_paths=PackedStringArray("follow_target", "start_target")]
 scale = Vector2(0.5, 0.5)
 process_callback = 0
 limit_left = 0
 limit_right = 2416
 limit_bottom = 384
 limit_smoothed = true
-position_smoothing_enabled = true
 script = ExtResource("7_4mrxx")
 follow_target = NodePath("..")
+start_target = NodePath("../../IntroPath/PathFollow2D")
 
-[node name="CameraRoom" type="Area2D" parent="." unique_id=1935291766 node_paths=PackedStringArray("focus_point")]
-position = Vector2(2064, 144)
+[node name="CameraRoom" type="Area2D" parent="." unique_id=1935291766 node_paths=PackedStringArray("camera_frame")]
+position = Vector2(2212, 141)
 collision_layer = 0
 collision_mask = 2
 script = ExtResource("10_w7kh3")
-focus_point = NodePath("Marker2D")
+camera_frame = NodePath("CameraFrame")
 
 [node name="CollisionShape2D" type="CollisionShape2D" parent="CameraRoom" unique_id=959119727]
-position = Vector2(-13, 18.5)
+position = Vector2(-92, 18.5)
 shape = SubResource("RectangleShape2D_wwt87")
 
-[node name="Marker2D" type="Marker2D" parent="CameraRoom" unique_id=1510766202]
+[node name="CameraFrame" type="Node2D" parent="CameraRoom" unique_id=1510766202]
+position = Vector2(-117, 15)
+script = ExtResource("11_frame")
 
 [connection signal="body_entered" from="CameraRoom" to="CameraRoom" method="_on_body_entered"]
 [connection signal="body_exited" from="CameraRoom" to="CameraRoom" method="_on_body_exited"]

@@ -1,6 +1,8 @@
 class_name Player
 extends CharacterBody2D
 
+static var instance: Player
+
 @export var SPEED: float = 300.0
 @export var JUMP_VELOCITY: float = -400.0
 @export var animated_sprite: AnimatedSprite2D
@@ -16,15 +18,31 @@ var current_state: State = State.IDLE
 
 var gravity: float = ProjectSettings.get_setting("physics/2d/default_gravity")
 var coins: int = 0
+var can_move: bool = true
+
+func _enter_tree() -> void:
+	assert(instance == null, "На сцене может быть только один экземпляр Player!")
+	instance = self
+
+func _exit_tree() -> void:
+	if instance == self:
+		instance = null
+
+static func set_movement_enabled(enabled: bool) -> void:
+	assert(instance != null, "Player: экземпляр игрока отсутствует на сцене!")
+	instance.can_move = enabled
 
 func _process(delta: float) -> void:
 	print(coins)
 
 func _physics_process(delta: float) -> void:
 	apply_gravity(delta)
-	handle_jump()
 	
-	var direction: float = Input.get_axis("move_left", "move_right")
+	var direction: float = 0.0
+	if can_move:
+		handle_jump()
+		direction = Input.get_axis("move_left", "move_right")
+	
 	handle_movement(direction)
 	
 	move_and_slide()
