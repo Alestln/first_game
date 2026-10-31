@@ -1,6 +1,6 @@
 extends Area2D
 
-var coin_value: int = 1
+@export var coin_value: int = 1
 var is_collected: bool = false
 
 @export var animated_sprite: AnimatedSprite2D
