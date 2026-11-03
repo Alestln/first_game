@@ -1,18 +1,13 @@
 class_name Player
 extends CharacterBody2D
 
-signal coins_changed(new_coins: int)
-signal health_changed(current_health: int, max_health: int)
-
-const MIN_COINS: int = 0
-const MIN_HEALTH: int = 0
-
 static var instance: Player
 
 @export var SPEED: float = 300.0
 @export var JUMP_VELOCITY: float = -400.0
-@export var max_health: int = 100
 @export var animated_sprite: AnimatedSprite2D
+@export var health_component: HealthComponent
+@export var coin_wallet: CoinWallet
 
 enum State {
 	IDLE,
@@ -26,33 +21,21 @@ var current_state: State = State.IDLE
 var gravity: float = ProjectSettings.get_setting("physics/2d/default_gravity")
 var can_move: bool = true
 
-var coins: int = MIN_COINS:
-	set(value):
-		coins = max(MIN_COINS, value)
-		coins_changed.emit(coins)
-
-var health: int = MIN_HEALTH:
-	set(value):
-		health = clampi(value, MIN_HEALTH, max_health)
-		health_changed.emit(health, max_health)
-
 func _enter_tree() -> void:
 	assert(instance == null, "На сцене может быть только один экземпляр Player!")
 	instance = self
-	health = max_health
 
 func _exit_tree() -> void:
 	if instance == self:
 		instance = null
 
+func _ready() -> void:
+	assert(health_component != null, "%s: 'health_component' обязателен для работы!" % name)
+	assert(coin_wallet != null, "%s: 'coin_wallet' обязателен для работы!" % name)
+
 static func set_movement_enabled(enabled: bool) -> void:
 	assert(instance != null, "Player: экземпляр игрока отсутствует на сцене!")
 	instance.can_move = enabled
-
-func take_damage(amount: int) -> void:
-	if amount <= 0:
-		return
-	health -= amount
 
 func _physics_process(delta: float) -> void:
 	apply_gravity(delta)

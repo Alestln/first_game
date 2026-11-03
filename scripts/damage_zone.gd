@@ -5,5 +5,4 @@ extends Area2D
 
 func _on_body_entered(body: Node2D) -> void:
 	if body is Player:
-		body.take_damage(damage)
-
+		body.health_component.take_damage(damage)

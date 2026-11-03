@@ -4,12 +4,13 @@
 [ext_resource type="Texture2D" path="res://assets/traps/spikes.png" id="2_spikes_tex"]
 
 [sub_resource type="RectangleShape2D" id="RectangleShape2D_spikes"]
-size = Vector2(28, 12)
+size = Vector2(14, 12)
 
 [node name="DamageZone" type="Area2D"]
 collision_layer = 0
 collision_mask = 2
 script = ExtResource("1_damage_script")
+damage = 1
 
 [node name="Sprite2D" type="Sprite2D" parent="."]
 texture = ExtResource("2_spikes_tex")
@@ -19,4 +20,3 @@ position = Vector2(0, 2)
 shape = SubResource("RectangleShape2D_spikes")
 
 [connection signal="body_entered" from="." to="." method="_on_body_entered"]
-
