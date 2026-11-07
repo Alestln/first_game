@@ -39,7 +39,7 @@ git checkout step-6-tilemap-scenes   # Шаг 6: Размещение монет
 - **00:05 – 00:20 (15 мин)** — Блок 1. `CanvasLayer` и зелёный мир `Control`-нод: почему интерфейс нельзя клеить к игроку.
 - **00:20 – 00:35 (15 мин)** — Блок 2. Адаптивная вёрстка: якоря (`Anchors`), безопасные поля (`MarginContainer`) и контейнеры (`HBoxContainer`).
 - **00:35 – 00:50 (15 мин)** — Блок 3. Кошелёк (`CoinWallet`) и счётчик монет (`CoinCounter`): декомпозиция игрока и сигналы.
-- **00:50 – 01:10 (20 мин)** — Блок 4. Компонент здоровья (`HealthComponent`) и шкала (`HealthBar`): геттеры, универсальный `clampi` и плавный `Tween`.
+- **00:50 – 01:10 (20 мин)** — Блок 4. Компонент здоровья (`HealthComponent`), тайминг неуязвимости, шкала (`HealthBar`) и шипы (`DamageZone`).
 - **01:10 – 01:20 (10 мин, если осталось время)** — Блок 5 (Бонус). Независимый виджет сердечек (`HeartsBar`) без переписывания кода.
 - **01:20 – 01:30 (10 мин)** — Блок 6. Расставляем монеты и ловушки кистью по сетке через `TileMapLayer` (`Scenes Collection`).
 - **01:30 – 01:35 (5 мин)** — Итоги, шпаргалка типичных ошибок, домашний челлендж.
@@ -170,12 +170,12 @@ const MIN_COINS: int = 0
 
 var _coins: int = MIN_COINS
 
-func get_coins() -> int:
-	return _coins
+var coins: int:
+	get:
+		return _coins
 
 func add_coins(amount: int) -> void:
-	if amount <= 0:
-		return
+	assert(amount > 0, "%s: количество монет должно быть больше 0 (передано: %d)!" % [name, amount])
 	_set_coins(_coins + amount)
 
 func _set_coins(value: int) -> void:
@@ -183,18 +183,19 @@ func _set_coins(value: int) -> void:
 	coins_changed.emit(_coins)
 ```
 
-**Разбор каждой детали (Инкапсуляция, Геттер и Сеттер):**
-- `var _coins: int = MIN_COINS` — нижнее подчёркивание `_` показывает, что переменная **приватная**. Ни один внешний скрипт не должен менять `_coins` напрямую в обход правил!
-- `func get_coins() -> int:` — явный **геттер** (метод только для чтения текущего баланса монет).
-- `func _set_coins(value: int) -> void:` — внутренний **сеттер-метод**, который гарантирует, что баланс не опустится ниже `MIN_COINS`, и рассылает сигнал `coins_changed`.
-- `func add_coins(amount: int) -> void:` — понятный публичный метод пополнения кошелька (отсекает некорректные отрицательные или нулевые значения).
+**Разбор каждой детали (Свойства только для чтения, `_`-конвенция и `assert`):**
+- **Зачем нижнее подчёркивание `_coins`, если в GDScript нет строгого `private` как в C#?**  
+  В GDScript (как и в Python) нет модификатора `private`, но префикс `_` — официальный стандарт код-стайла Godot: он сигнализирует программисту, что это внутреннее поле компонента и трогать его напрямую нельзя (иначе мы обойдём проверки и забудем отправить сигнал `coins_changed`).
+- **Нативное свойство `var coins: int: get:` вместо Java-методов `get_coins()`:**  
+  В GDScript 4 свойство, у которого описан только блок `get:` без `set:`, реально **защищено анализатором движка на этапе написания кода**! Снаружи его удобно читать как обычное поле (`coin_wallet.coins`), но если кто-то попытается написать `coin_wallet.coins = 999`, редактор Godot сразу выдаст ошибку компиляции: *`Cannot assign a new value to a read-only property "coins"`*.
+- **Почему `assert(amount > 0, ...)` вместо тихого `if amount <= 0: return`?**  
+  При подборе монеты в игру физически не должен приходить `0` или минус. Тихий `return` спрятал бы ошибку настройки в Инспекторе, а `assert` работает по принципу **Fail-Fast** — мгновенно останавливает отладку и прямо указывает на сломанное значение.
 
 ### 3.3. Пишем независимый скрипт виджета `scripts/coin_counter.gd`
 
 Прикрепляем скрипт **`res://scripts/coin_counter.gd`** прямо к узлу **`CoinLabel`** в `scenes/hud.tscn`:
 
 ```gdscript
-class_name CoinCounter
 extends Label
 
 @export var coin_wallet: CoinWallet
@@ -203,13 +204,16 @@ func _ready() -> void:
 	assert(coin_wallet != null, "%s: 'coin_wallet' обязателен для работы!" % name)
 	
 	coin_wallet.coins_changed.connect(_on_coins_changed)
-	_on_coins_changed(coin_wallet.get_coins())
+	_on_coins_changed(coin_wallet.coins)
 
 func _on_coins_changed(new_coins: int) -> void:
 	text = str(new_coins)
 ```
 
-- Посмотрите: весь скрипт — **14 строк**! Он отвечает строго за свою надпись `Label`, слушает только `CoinWallet` и вообще ничего не знает про остальной интерфейс!
+**Два важных архитектурных акцента для преподавателя:**
+1. **Почему здесь нет `class_name`?** В GDScript нет пространств имён (`namespace`), поэтому каждый `class_name` попадает в глобальную область видимости проекта и добавляется в окно создания узлов (`Create New Node`). Мы даём `class_name` **только** тем компонентам и сущностям (`CoinWallet`, `HealthComponent`, `Player`), которые используются как типы в других скриптах, и не засоряем глобальную область частными скриптами виджетов.
+2. **Почему сигнал подключён кодом (`.connect()`), а не через Инспектор, как в `coin.tscn`?**  
+   Внутри **одной** сцены (`coin.tscn`) источник и получатель сигнала живут рядом, поэтому подключение через вкладку «Сигналы» сохраняется один раз внутри самой сцены монетки. А `CoinWallet` (`player.tscn`) и `CoinLabel` (`hud.tscn`) живут в **разных сценах**! Виджету всё равно нужна `@export`-ссылка `coin_wallet`, чтобы прочитать стартовый баланс в `_ready()`. Подключение `.connect()` в коде избавляет от двойной ручной работы на каждом уровне (`level_1`, `level_2`...) и исключает баг, когда ссылку назначили, а сигнал в Инспекторе привязать забыли.
 
 ---
 
@@ -229,7 +233,7 @@ func _on_coins_changed(new_coins: int) -> void:
 ### 4.2. Создаём универсальный компонент `scripts/health_component.gd`
 
 > **Вопрос классу:** *«Почему вынести здоровье в отдельный компонент `HealthComponent` ещё круче, чем писать его в игроке?»*  
-> **Ответ:** Потому что на следующих занятиях у нас появятся **враги, боссы и разрушаемые ящики**! Мы просто перетащим готовый `HealthComponent` внутрь любого врага — и он сразу обретёт здоровье без единой новой строчки кода!
+> **Ответ:** Потому что на следующих занятиях у нас появятся **враги, боссы и разрушаемые ящики**! Мы просто добавим `HealthComponent` внутрь любого живого существа — и шипы или ловушки смогут наносить урон кому угодно, а не только игроку!
 
 Создаём скрипт **`res://scripts/health_component.gd`**:
 
@@ -242,32 +246,51 @@ signal health_changed(current_health: int, max_health: int)
 const MIN_HEALTH: int = 0
 
 @export var max_health: int = 100
+@export var invincibility_duration: float = 0.8
 
 var _current_health: int = MIN_HEALTH
+var _is_invincible: bool = false
+
+var current_health: int:
+	get:
+		return _current_health
 
 func _enter_tree() -> void:
 	_set_health(max_health)
 
-func get_health() -> int:
-	return _current_health
-
-func get_max_health() -> int:
-	return max_health
+static func get_from(node: Node) -> HealthComponent:
+	for child: Node in node.get_children():
+		if child is HealthComponent:
+			return child
+	return null
 
 func take_damage(amount: int) -> void:
-	if amount <= 0:
+	assert(amount > 0, "%s: урон должен быть больше 0 (передано: %d)!" % [name, amount])
+	
+	if _is_invincible or _current_health <= MIN_HEALTH:
 		return
+	
 	_set_health(_current_health - amount)
+	_start_invincibility()
 
 func _set_health(value: int) -> void:
 	_current_health = clampi(value, MIN_HEALTH, max_health)
 	health_changed.emit(_current_health, max_health)
+
+func _start_invincibility() -> void:
+	if invincibility_duration <= 0.0:
+		return
+	
+	_is_invincible = true
+	await get_tree().create_timer(invincibility_duration).timeout
+	_is_invincible = false
 ```
 
 **Разбор архитектуры `HealthComponent`:**
-1. **Явные геттеры `get_health()` и `get_max_health()`:** внешний мир может безопасно прочитать текущее и максимальное здоровье, но не может напрямую испортить приватную переменную `_current_health`.
-2. **Универсальный внутренний метод `_set_health(value: int)` с `clampi`:** в одном-единственном месте зажимает здоровье в границах от `MIN_HEALTH` до `max_health` и отправляет сигнал `health_changed`.
-3. **Публичный метод `take_damage(amount: int)` и правило YAGNI:** сейчас в игре есть только урон от ловушек, поэтому мы пишем только `take_damage()`. Когда в игре появятся аптечки, добавить `heal(amount: int)` можно будет в 3 строчки через тот же `_set_health(_current_health + amount)`!
+1. **Свойство только для чтения `current_health` (`get:`):** внешний код читает `health_component.current_health` и `health_component.max_health`, но не может присвоить здоровье в обход правил.
+2. **Статический поиск `HealthComponent.get_from(node)`:** позволяет любой ловушке спросить у столкнувшегося тела: *«У тебя есть компонент здоровья?»* — не привязываясь жёстко к классу `Player`.
+3. **Окно неуязвимости (`invincibility_duration = 0.8` сек):** в платформерах после получения урона персонажу дают короткую передышку (*i-frames*), чтобы он успел выпрыгнуть из шипов, а не потерял всё здоровье за долю секунды при касании двух соседних клеток шипов.
+4. **Универсальный `_set_health(value)` с `clampi` и правило YAGNI:** зажимает здоровье от `MIN_HEALTH` до `max_health` и шлёт сигнал `health_changed`. Пока в игре нет аптечек или пропастей с мгновенной смертью, мы пишем только `take_damage()`, но добавить `heal()` или `kill()` в будущем можно будет за 2 строчки через `_set_health()`!
 
 ### 4.3. Подключаем компоненты в `scenes/player.tscn`, `player.gd` и `coin.gd`
 
@@ -275,21 +298,19 @@ func _set_health(value: int) -> void:
    - Добавляем дочерними узлами к `Player` два узла `Node`: называем их **`HealthComponent`** (вешаем `scripts/health_component.gd`) и **`CoinWallet`** (вешаем `scripts/coin_wallet.gd`).
 2. Открываем **`scripts/player.gd`**:
    - Удаляем старый `func _process(delta): print(coins)` и `var coins: int = 0`.
-   - Добавляем только ссылки на компоненты и проверку `assert` в `_ready()`:
+   - В самом `player.gd` нам нужна ссылка **только на `CoinWallet`** (а `HealthComponent` ловушки находят сами через `HealthComponent.get_from(body)` — скрипт игрока остаётся максимально чистым!):
 
 ```gdscript
 @export var animated_sprite: AnimatedSprite2D
-@export var health_component: HealthComponent
 @export var coin_wallet: CoinWallet
 ```
 
 ```gdscript
 func _ready() -> void:
-	assert(health_component != null, "%s: 'health_component' обязателен для работы!" % name)
 	assert(coin_wallet != null, "%s: 'coin_wallet' обязателен для работы!" % name)
 ```
-   - В сцене `scenes/player.tscn` назначаем `HealthComponent` и `CoinWallet` в слоты Инспектора у `Player`.
-3. В **`scripts/coin.gd`** делаем `@export var coin_value: int = 1` и в методе `collect(player: Player)` вызываем метод кошелька:
+   - В сцене `scenes/player.tscn` назначаем узел `CoinWallet` в слот Инспектора у `Player`.
+3. В **`scripts/coin.gd`** делаем `@export var coin_value: int = 1`, оставляем проверку `if body is Player` (в одиночной игре кошелёк есть только у игрока, а его наличие уже гарантировано через `assert` в `Player._ready()`) и в `collect(player: Player)` вызываем:
 
 ```gdscript
 	player.coin_wallet.add_coins(coin_value)
@@ -300,7 +321,6 @@ func _ready() -> void:
 Прикрепляем скрипт **`res://scripts/health_bar.gd`** непосредственно к узлу **`HealthBar`** (`TextureProgressBar`) в `scenes/hud.tscn`:
 
 ```gdscript
-class_name HealthBar
 extends TextureProgressBar
 
 @export var health_component: HealthComponent
@@ -312,8 +332,8 @@ func _ready() -> void:
 	assert(health_component != null, "%s: 'health_component' обязателен для работы!" % name)
 	
 	min_value = HealthComponent.MIN_HEALTH
-	max_value = health_component.get_max_health()
-	value = health_component.get_health()
+	max_value = health_component.max_health
+	value = health_component.current_health
 	
 	health_component.health_changed.connect(_on_health_changed)
 
@@ -328,22 +348,32 @@ func _on_health_changed(current_health: int, max_health_value: int) -> void:
 	_health_tween.tween_property(self, "value", float(current_health), tween_duration)
 ```
 
-- Обратите внимание: `HealthBar` даже не привязан жёстко к классу `Player`! Он принимает любой `HealthComponent` — этим же скриптом можно сделать полоску здоровья босса!
+- Обратите внимание: `HealthBar` вообще не знает про класс `Player` — этим же скриптом можно отображать полоску здоровья босса или ворот замка!
 
 ### 4.5. Создаём сцену ловушки `scenes/damage_zone.tscn` и связываем всё в `world.tscn` через `Editable Children`
 
-1. Создаём сцену **`scenes/damage_zone.tscn`** (`Area2D`, `collision_layer = 0`, `collision_mask = 2`) со спрайтом `assets/traps/spikes.png` (`16×16` px), `CollisionShape2D` (`14×12` px, `position = Vector2(0, 2)`) и скриптом **`res://scripts/damage_zone.gd`**:
+1. Создаём сцену **`scenes/damage_zone.tscn`** (`Area2D`, `collision_layer = 0`, `collision_mask = 2`) со спрайтом `assets/traps/spikes.png` (`16×16` px), `CollisionShape2D` (`14×12` px, `position = Vector2(0, 2)`) и скриптом **`res://scripts/damage_zone.gd`** *(без подключения сигнала `body_entered`!)*:
 
 ```gdscript
-class_name DamageZone
 extends Area2D
 
-@export var damage: int = 20
+@export var damage: int = 1
 
-func _on_body_entered(body: Node2D) -> void:
-	if body is Player:
-		body.health_component.take_damage(damage)
+func _physics_process(_delta: float) -> void:
+	if not has_overlapping_bodies():
+		return
+	
+	for body: Node2D in get_overlapping_bodies():
+		var health: HealthComponent = HealthComponent.get_from(body)
+		if health != null:
+			health.take_damage(damage)
 ```
+
+*(Для промежуточного теста со `100` ХП до Блока 5 можно временно выставить в Инспекторе `Damage = 20`, а с сердечками вернуть `Damage = 1` и `Max Health = 5`).*
+
+**Почему мы проверяем `has_overlapping_bodies()` в `_physics_process`, а не сигнал `body_entered`?**
+- Если использовать разовый сигнал `body_entered`, то когда игрок остановится прямо посреди шипов, после окончания 0.8 секунды неуязвимости урон перестанет наноситься, пока он не выйдет и не зайдёт заново!
+- А связка `has_overlapping_bodies()` + `invincibility_duration` работает как в классических платформерах: пока на шипах никого нет, быстрый выход `if not has_overlapping_bodies(): return` почти ничего не стоит движку; при наступании на ряд шипов герой получает ровно 1 удар и имеет 0.8 секунды, чтобы выпрыгнуть; а если продолжает стоять на колючках — получает периодический урон каждые 0.8 секунды!
 
 2. Открываем **`scenes/world.tscn`** и добавляем в корень сцену **`scenes/hud.tscn`** (кнопка цепочки **Instantiate Child Scene**).
 3. **Что такое `Editable Children` («Редактируемые дочерние узлы») и зачем он нужен?**
@@ -355,20 +385,19 @@ func _on_body_entered(body: Node2D) -> void:
    - Выбираем `HUD/MarginContainer/TopBar/HealthBox/HealthBar` и в поле **`Health Component`** назначаем узел `Player/HealthComponent`.
    - Выбираем `HUD/MarginContainer/TopBar/CoinBox/CoinLabel` и в поле **`Coin Wallet`** назначаем узел `Player/CoinWallet`.
 
-> **Тест (`F5`):** Бежим по уровню, собираем монетки, наступаем на шипы и растягиваем окно игры! Счётчик монет и плавная полоска ХП работают как часы!
+> **Тест (`F5`):** Бежим по уровню, собираем монетки, пробегаем по шипам (получаем урон с честным таймингом 0.8 с и успеваем выпрыгнуть!) и растягиваем окно игры!
 
 ---
 
 ## 💖 Блок 5 (Бонус — если осталось время). Независимый виджет сердечек (`HeartsBar`)
 
 > **Слова преподавателя:**  
-> *«А теперь оцените мощь того, что мы не стали лепить один общий скрипт на весь `HUD`! Мы хотим добавить отображение здоровья в виде сердечек. Нам вообще **не нужно открывать и менять** ни `player.gd`, ни `health_component.gd`, ни `health_bar.gd`, ни `coin_counter.gd`! Мы просто добавим в `HealthBox` новый независимый узел `HeartsBar`!»*
+> *«А теперь оцените мощь того, что мы не стали лепить один общий скрипт на весь `HUD`! Мы хотим добавить отображение здоровья в виде сердечек. Нам вообще **не нужно открывать и менять** ни `player.gd`, ни `health_component.gd`, ни `health_bar.gd`, ни `coin_counter.gd`! Мы просто один раз создадим иконки сердечек на старте и будем на лету менять им картинку с полной на пустую!»*
 
 1. В сцене **`scenes/hud.tscn`** внутрь `HealthBox` добавляем **`HBoxContainer`** с именем **`HeartsBar`** (`Separation = 3`).
 2. Прикрепляем к нему скрипт **`res://scripts/hearts_bar.gd`**:
 
 ```gdscript
-class_name HeartsBar
 extends HBoxContainer
 
 @export var health_component: HealthComponent
@@ -380,37 +409,30 @@ func _ready() -> void:
 	assert(full_heart_texture != null, "%s: 'full_heart_texture' обязателен для работы!" % name)
 	assert(empty_heart_texture != null, "%s: 'empty_heart_texture' обязателен для работы!" % name)
 	
-	health_component.health_changed.connect(_on_health_changed)
-	_on_health_changed(health_component.get_health(), health_component.get_max_health())
-
-func _on_health_changed(current_health: int, max_health: int) -> void:
-	_sync_hearts_count(max_health)
+	for i: int in range(health_component.max_health):
+		var heart_icon: TextureRect = TextureRect.new()
+		heart_icon.stretch_mode = TextureRect.STRETCH_KEEP_ASPECT_CENTERED
+		add_child(heart_icon)
 	
-	for i: int in range(max_health):
+	health_component.health_changed.connect(_on_health_changed)
+	_on_health_changed(health_component.current_health, health_component.max_health)
+
+func _on_health_changed(current_health: int, _max_health: int) -> void:
+	for i: int in range(get_child_count()):
 		var heart_icon: TextureRect = get_child(i) as TextureRect
 		if i < current_health:
 			heart_icon.texture = full_heart_texture
 		else:
 			heart_icon.texture = empty_heart_texture
-
-func _sync_hearts_count(target_count: int) -> void:
-	while get_child_count() < target_count:
-		var heart_icon: TextureRect = TextureRect.new()
-		heart_icon.stretch_mode = TextureRect.STRETCH_KEEP_ASPECT_CENTERED
-		add_child(heart_icon)
-	
-	while get_child_count() > target_count:
-		var last_index: int = get_child_count() - 1
-		var extra_heart: Node = get_child(last_index)
-		remove_child(extra_heart)
-		extra_heart.queue_free()
 ```
+
+- **Чистый YAGNI в действии:** поскольку максимальное здоровье героя во время забега не меняется, мы создаём `TextureRect`-иконки ровно один раз в `_ready()`, а в `_on_health_changed()` просто мгновенно подменяем свойство `.texture` (`full_heart_texture` / `empty_heart_texture`) без удаления и пересоздания узлов!
 
 3. В Инспекторе `HeartsBar` в `scenes/hud.tscn` назначаем `heart_full.png` и `heart_empty.png`.
 4. В сцене **`scenes/world.tscn`**:
-   - У `HeartsBar` в слот **`Health Component`** перетаскиваем `Player/HealthComponent`.
+   - У `HeartsBar` в слот **`Health Component`** назначаем `Player/HealthComponent`.
    - У `Player/HealthComponent` ставим **`Max Health = 5`**.
-   - У сцены `damage_zone.tscn` ставим **`Damage = 1`**.
+   - У `damage_zone.tscn` проверяем **`Damage = 1`**.
 
 > **Тест (`F5`):** В левом верхнем углу **одновременно** и полоска `HealthBar` плавно скользит на 20% при каждом ударе, и 5 сердечек `HeartsBar` гаснут по одному — потому что оба независимых виджета слушают один и тот же сигнал от `HealthComponent`!
 
@@ -425,21 +447,21 @@ func _sync_hearts_count(target_count: int) -> void:
 > Можно ли рисовать готовые сцены с `Area2D` и скриптами прямо кисточкой по сетке, как мы рисовали землю?»*  
 > **Ответ:** Да! В Godot 4 `TileSet` умеет хранить не только картинки-атласы, но и **Коллекции сцен (`Scenes Collection`)**!
 
-### 6.2. Пошаговая настройка `Scenes Collection` в `scenes/world.tscn`
+### 6.2. Пошаговая настройка отдельного `TileSet` с `Scenes Collection` в `scenes/world.tscn`
 
 1. В сцене `scenes/world.tscn` удаляем старый узел `Coins` со всеми `Coin1 ... Coin13` — больше никакого ручного копирования!
 2. Внутри `TileMapLayers` (рядом с `Environment`) добавляем второй узел **`TileMapLayer`** и называем его **`Objects`**.
-3. В Инспекторе у `Objects` в поле **`Tile Set`** выбираем тот же самый `TileSet`, который уже используется у `Environment` (или нажимаем на `TileSet` в `Environment`, чтобы открыть нижнюю панель **`TileSet`**).
-4. В нижней панели **`TileSet`** (слева, где список источников атласов):
+3. В Инспекторе у `Objects` в поле **`Tile Set`** создаём **отдельный `New TileSet`** (размер клетки по умолчанию `Tile Size = 16×16` px совпадает со слоем земли!).
+   - *Почему отдельный `TileSet`, а не общий с `Environment`?* Слой `Environment` хранит статический атлас земли с физическими коллайдерами и автотайлингом, а слой `Objects` отвечает исключительно за спавн интерактивных сцен. Свой чистый `TileSet` без атласа земли не захламляет палитру объектов!
+4. Кликаем по созданному `TileSet` у `Objects`, чтобы открыть нижнюю панель **`TileSet`**:
    - Нажимаем кнопку **`+` (Add)** ➔ выбираем **`Scenes Collection` (Коллекция сцен)**.
-   - У нас появился новый источник сцен (справа пустой список).
-   - Перетаскиваем из Файловой системы (`FileSystem`) прямо в это поле файлы **`res://scenes/coin.tscn`** и **`res://scenes/damage_zone.tscn`**!
+   - Перетаскиваем из Файловой системы (`FileSystem`) прямо в список сцен файлы **`res://scenes/coin.tscn`** и **`res://scenes/damage_zone.tscn`**!
 5. Переключаемся на нижнюю вкладку **`TileMap`**, выбираем в дереве узел **`Objects`**, кликаем по источнику сцен и выбираем инструмент **Кисть (Paint)**:
    - Выбираем в палитре монетку и за 3 секунды рисуем дуги и дорожки из монет по воздуху!
    - Выбираем в палитре шипы (`damage_zone.tscn`, размер спрайта `16×16` px ровно под клетку сетки!) и проводим кистью по клеткам прямо над травой — шипы идеально, пиксель в пиксель, встают на поверхность земли!
 
 > **Финальный тест занятия (`F5`):**  
-> При запуске игры `TileMapLayer` автоматически превращает каждую нарисованную клетку в живой узел `Area2D` со скриптами и анимациями: монетки крутятся, собираются и исчезают через `queue_free()`, шипы отнимают здоровье, а дерево сцены `world.tscn` остаётся идеально чистым!
+> При запуске игры `TileMapLayer` автоматически превращает каждую нарисованную клетку в живой узел `Area2D` со скриптами и анимациями: монетки крутятся, собираются и исчезают через `queue_free()`, шипы отнимают здоровье с таймингом, а дерево сцены `world.tscn` остаётся идеально чистым!
 
 ---
 
@@ -452,7 +474,8 @@ func _sync_hearts_count(target_count: int) -> void:
 | **Верхняя панель `TopBar` растянулась до пола** | У `TopBar` внутри `MarginContainer` стоит `Vertical = Fill`. | В разделе `Container Sizing ➔ Vertical` выбрать **`Shrink Begin`**. |
 | **Не видно внутренних узлов `HUD` и `Player` в сцене `world.tscn`** | Сцены свёрнуты как единые экземпляры. | Нажать ПКМ по `HUD` и `Player` в `world.tscn` ➔ включить **`Editable Children`**. |
 | **Полоска `TextureProgressBar` при `Tween` дёргается рывками** | У `TextureProgressBar` по умолчанию стоит шаг `Step = 1.0`. | В разделе `Range` у `HealthBar` поставить **`Step = 0.01`**. |
-| **Игра зависает при уменьшении количества сердечек** | В цикле `while` вызвали `queue_free()` без `remove_child()`. | Перед `extra_heart.queue_free()` обязательно вызвать `remove_child(extra_heart)`. |
+| **Герой теряет всё ХП мгновенно при пробежке по ряду шипов** | Соседние клетки шипов срабатывают подряд без задержки. | Добавить таймер неуязвимости `invincibility_duration` в `HealthComponent` и проверку `has_overlapping_bodies()` в `damage_zone.gd`. |
+| **В палитре слоя `Objects` мешается земля из `Environment`** | Слои `Environment` и `Objects` делят один общий `TileSet`. | Создать для узла `Objects` собственный **`New TileSet`**, содержащий только `Scenes Collection`. |
 
 ---
 

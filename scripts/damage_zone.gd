@@ -1,8 +1,12 @@
-class_name DamageZone
 extends Area2D
 
-@export var damage: int = 20
+@export var damage: int = 1
 
-func _on_body_entered(body: Node2D) -> void:
-	if body is Player:
-		body.health_component.take_damage(damage)
+func _physics_process(_delta: float) -> void:
+	if not has_overlapping_bodies():
+		return
+	
+	for body: Node2D in get_overlapping_bodies():
+		var health: HealthComponent = HealthComponent.get_from(body)
+		if health != null:
+			health.take_damage(damage)

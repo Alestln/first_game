@@ -6,7 +6,6 @@ static var instance: Player
 @export var SPEED: float = 300.0
 @export var JUMP_VELOCITY: float = -400.0
 @export var animated_sprite: AnimatedSprite2D
-@export var health_component: HealthComponent
 @export var coin_wallet: CoinWallet
 
 enum State {
@@ -30,7 +29,6 @@ func _exit_tree() -> void:
 		instance = null
 
 func _ready() -> void:
-	assert(health_component != null, "%s: 'health_component' обязателен для работы!" % name)
 	assert(coin_wallet != null, "%s: 'coin_wallet' обязателен для работы!" % name)
 
 static func set_movement_enabled(enabled: bool) -> void:

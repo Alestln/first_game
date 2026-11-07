@@ -1,4 +1,3 @@
-class_name HealthBar
 extends TextureProgressBar
 
 @export var health_component: HealthComponent
@@ -10,8 +9,8 @@ func _ready() -> void:
 	assert(health_component != null, "%s: 'health_component' обязателен для работы!" % name)
 	
 	min_value = HealthComponent.MIN_HEALTH
-	max_value = health_component.get_max_health()
-	value = health_component.get_health()
+	max_value = health_component.max_health
+	value = health_component.current_health
 	
 	health_component.health_changed.connect(_on_health_changed)
 

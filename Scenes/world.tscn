@@ -115,10 +115,6 @@ texture = ExtResource("1_go701")
 19:1/0/physics_layer_0/polygon_0/points = PackedVector2Array(-8, -8, 8, -8, 8, -4, -8, -4)
 19:1/0/physics_layer_0/polygon_0/one_way = true
 
-[sub_resource type="TileSetScenesCollectionSource" id="TileSetScenesCollectionSource_objects"]
-scenes/1/scene = ExtResource("3_5a7ea")
-scenes/2/scene = ExtResource("13_damage_zone")
-
 [sub_resource type="TileSet" id="TileSet_wwt87"]
 physics_layer_0/collision_layer = 1
 physics_layer_0/collision_mask = 0
@@ -126,7 +122,13 @@ terrain_set_0/mode = 0
 terrain_set_0/terrain_0/name = "Ground"
 terrain_set_0/terrain_0/color = Color(0.5356537, 0.22086379, 0.636065, 1)
 sources/1 = SubResource("TileSetAtlasSource_5a7ea")
-sources/2 = SubResource("TileSetScenesCollectionSource_objects")
+
+[sub_resource type="TileSetScenesCollectionSource" id="TileSetScenesCollectionSource_objects"]
+scenes/1/scene = ExtResource("3_5a7ea")
+scenes/2/scene = ExtResource("13_damage_zone")
+
+[sub_resource type="TileSet" id="TileSet_objects"]
+sources/0 = SubResource("TileSetScenesCollectionSource_objects")
 
 [sub_resource type="Curve2D" id="Curve2D_w7kh3"]
 _data = {
@@ -189,8 +191,8 @@ tile_map_data = PackedByteArray("AAAAABMAAQAGAAEAAAAAABQAAQAGAAEAAAAAABUAAQAGAAE
 tile_set = SubResource("TileSet_wwt87")
 
 [node name="Objects" type="TileMapLayer" parent="TileMapLayers"]
-tile_map_data = PackedByteArray("AAAqAAwAAgAAAAAAAgAoAAsAAgAAAAAAAQAjABEAAgAAAAAAAgA7AAQAAgAAAAAAAQA5AAUAAgAAAAAAAQAzAAgAAgAAAAAAAQASAAwAAgAAAAAAAQASAAcAAgAAAAAAAQASAAUAAgAAAAAAAQAiABEAAgAAAAAAAgAYAAwAAgAAAAAAAQAVAAwAAgAAAAAAAQBxABEAAgAAAAAAAgBuABAAAgAAAAAAAQBsABEAAgAAAAAAAgB2ABAAAgAAAAAAAQB0ABAAAgAAAAAAAQByABEAAgAAAAAAAgA/AAoAAgAAAAAAAQA+AAcAAgAAAAAAAQA9AAUAAgAAAAAAAQBrABEAAgAAAAAAAgBoABAAAgAAAAAAAQBAAA0AAgAAAAAAAQA=")
-tile_set = SubResource("TileSet_wwt87")
+tile_map_data = PackedByteArray("AAAqAAwAAAAAAAAAAgAoAAsAAAAAAAAAAQAjABEAAAAAAAAAAgA7AAQAAAAAAAAAAQA5AAUAAAAAAAAAAQAzAAgAAAAAAAAAAQASAAwAAAAAAAAAAQASAAcAAAAAAAAAAQASAAUAAAAAAAAAAQAiABEAAAAAAAAAAgAYAAwAAAAAAAAAAQAVAAwAAAAAAAAAAQBxABEAAAAAAAAAAgBuABAAAAAAAAAAAQBsABEAAAAAAAAAAgB2ABAAAAAAAAAAAQB0ABAAAAAAAAAAAQByABEAAAAAAAAAAgA/AAoAAAAAAAAAAQA+AAcAAAAAAAAAAQA9AAUAAAAAAAAAAQBrABEAAAAAAAAAAgBoABAAAAAAAAAAAQBAAA0AAAAAAAAAAQA=")
+tile_set = SubResource("TileSet_objects")
 
 [node name="IntroPath" type="Path2D" parent="." unique_id=484201222 node_paths=PackedStringArray("path_follow")]
 curve = SubResource("Curve2D_w7kh3")

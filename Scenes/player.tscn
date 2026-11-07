@@ -201,11 +201,10 @@ animations = [{
 [sub_resource type="RectangleShape2D" id="RectangleShape2D_wwt87"]
 size = Vector2(16, 24)
 
-[node name="Player" type="CharacterBody2D" unique_id=1713449004 node_paths=PackedStringArray("animated_sprite", "health_component", "coin_wallet")]
+[node name="Player" type="CharacterBody2D" unique_id=1713449004 node_paths=PackedStringArray("animated_sprite", "coin_wallet")]
 collision_layer = 2
 script = ExtResource("1_qlg0r")
 animated_sprite = NodePath("AnimatedSprite")
-health_component = NodePath("HealthComponent")
 coin_wallet = NodePath("CoinWallet")
 
 [node name="AnimatedSprite" type="AnimatedSprite2D" parent="." unique_id=1516518533]

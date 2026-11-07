@@ -7,12 +7,12 @@ const MIN_COINS: int = 0
 
 var _coins: int = MIN_COINS
 
-func get_coins() -> int:
-	return _coins
+var coins: int:
+	get:
+		return _coins
 
 func add_coins(amount: int) -> void:
-	if amount <= 0:
-		return
+	assert(amount > 0, "%s: количество монет должно быть больше 0 (передано: %d)!" % [name, amount])
 	_set_coins(_coins + amount)
 
 func _set_coins(value: int) -> void:
