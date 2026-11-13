@@ -5,6 +5,8 @@
 [ext_resource type="Texture2D" uid="uid://cj4l77nlot6qa" path="res://assets/animations/pink_man/idle.png" id="3_fjrip"]
 [ext_resource type="Texture2D" uid="uid://d3odua6nho13i" path="res://assets/animations/pink_man/jump.png" id="4_smehm"]
 [ext_resource type="Texture2D" uid="uid://kywhgjnquktv" path="res://assets/animations/pink_man/run.png" id="5_ur7pv"]
+[ext_resource type="Script" path="res://scripts/health_component.gd" id="6_health"]
+[ext_resource type="Script" path="res://scripts/coin_wallet.gd" id="7_wallet"]
 
 [sub_resource type="AtlasTexture" id="AtlasTexture_y4r1p"]
 atlas = ExtResource("3_fjrip")
@@ -199,10 +201,11 @@ animations = [{
 [sub_resource type="RectangleShape2D" id="RectangleShape2D_wwt87"]
 size = Vector2(16, 24)
 
-[node name="Player" type="CharacterBody2D" unique_id=1713449004 node_paths=PackedStringArray("animated_sprite")]
+[node name="Player" type="CharacterBody2D" unique_id=1713449004 node_paths=PackedStringArray("animated_sprite", "coin_wallet")]
 collision_layer = 2
 script = ExtResource("1_qlg0r")
 animated_sprite = NodePath("AnimatedSprite")
+coin_wallet = NodePath("CoinWallet")
 
 [node name="AnimatedSprite" type="AnimatedSprite2D" parent="." unique_id=1516518533]
 sprite_frames = SubResource("SpriteFrames_0lyci")
@@ -211,3 +214,9 @@ animation = &"idle"
 [node name="CollisionShape" type="CollisionShape2D" parent="." unique_id=262113368]
 position = Vector2(0, 4)
 shape = SubResource("RectangleShape2D_wwt87")
+
+[node name="HealthComponent" type="Node" parent="."]
+script = ExtResource("6_health")
+
+[node name="CoinWallet" type="Node" parent="."]
+script = ExtResource("7_wallet")

@@ -6,6 +6,7 @@ static var instance: Player
 @export var SPEED: float = 300.0
 @export var JUMP_VELOCITY: float = -400.0
 @export var animated_sprite: AnimatedSprite2D
+@export var coin_wallet: CoinWallet
 
 enum State {
 	IDLE,
@@ -17,7 +18,6 @@ enum State {
 var current_state: State = State.IDLE
 
 var gravity: float = ProjectSettings.get_setting("physics/2d/default_gravity")
-var coins: int = 0
 var can_move: bool = true
 
 func _enter_tree() -> void:
@@ -28,12 +28,12 @@ func _exit_tree() -> void:
 	if instance == self:
 		instance = null
 
+func _ready() -> void:
+	assert(coin_wallet != null, "%s: 'coin_wallet' обязателен для работы!" % name)
+
 static func set_movement_enabled(enabled: bool) -> void:
 	assert(instance != null, "Player: экземпляр игрока отсутствует на сцене!")
 	instance.can_move = enabled
-
-func _process(delta: float) -> void:
-	print(coins)
 
 func _physics_process(delta: float) -> void:
 	apply_gravity(delta)
