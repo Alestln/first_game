@@ -1,0 +1,145 @@
+[gd_scene format=3 uid="uid://c7dmyscene001"]
+
+[ext_resource type="Script" uid="uid://c7trndummy001" path="res://scripts/training_dummy.gd" id="1_dummy_script"]
+[ext_resource type="Texture2D" uid="uid://c7dmyidle0004" path="res://assets/animations/training_dummy/idle.png" id="2_dummy_idle"]
+[ext_resource type="Texture2D" uid="uid://c7dmyhit00005" path="res://assets/animations/training_dummy/hit.png" id="3_dummy_hit"]
+[ext_resource type="Script" uid="uid://chc0142th8496" path="res://scripts/health_component.gd" id="4_health"]
+[ext_resource type="Script" uid="uid://c7hurtbox0001" path="res://scripts/hurtbox.gd" id="5_hurtbox"]
+[ext_resource type="Script" uid="uid://c7hitbox00001" path="res://scripts/hitbox.gd" id="6_hitbox"]
+[ext_resource type="Texture2D" path="res://assets/ui/bar_under.png" id="7_bar_under"]
+[ext_resource type="Texture2D" path="res://assets/ui/bar_over.png" id="8_bar_over"]
+[ext_resource type="Texture2D" path="res://assets/ui/bar_progress.png" id="9_bar_prog"]
+[ext_resource type="Script" path="res://scripts/health_bar.gd" id="10_health_bar"]
+[ext_resource type="Texture2D" uid="uid://c7dmydst00006" path="res://assets/animations/training_dummy/destroy.png" id="11_dummy_destroy"]
+
+[sub_resource type="AtlasTexture" id="AtlasTexture_dst_0"]
+atlas = ExtResource("11_dummy_destroy")
+region = Rect2(0, 0, 32, 32)
+
+[sub_resource type="AtlasTexture" id="AtlasTexture_dst_1"]
+atlas = ExtResource("11_dummy_destroy")
+region = Rect2(32, 0, 32, 32)
+
+[sub_resource type="AtlasTexture" id="AtlasTexture_dst_2"]
+atlas = ExtResource("11_dummy_destroy")
+region = Rect2(64, 0, 32, 32)
+
+[sub_resource type="AtlasTexture" id="AtlasTexture_dst_3"]
+atlas = ExtResource("11_dummy_destroy")
+region = Rect2(96, 0, 32, 32)
+
+[sub_resource type="AtlasTexture" id="AtlasTexture_dst_4"]
+atlas = ExtResource("11_dummy_destroy")
+region = Rect2(128, 0, 32, 32)
+
+[sub_resource type="SpriteFrames" id="SpriteFrames_dummy"]
+animations = [{
+"frames": [{
+"duration": 1.0,
+"texture": SubResource("AtlasTexture_dst_0")
+}, {
+"duration": 1.0,
+"texture": SubResource("AtlasTexture_dst_1")
+}, {
+"duration": 1.0,
+"texture": SubResource("AtlasTexture_dst_2")
+}, {
+"duration": 1.0,
+"texture": SubResource("AtlasTexture_dst_3")
+}, {
+"duration": 1.0,
+"texture": SubResource("AtlasTexture_dst_4")
+}],
+"loop": 0,
+"name": &"destroy",
+"speed": 11.0
+}, {
+"frames": [{
+"duration": 1.0,
+"texture": ExtResource("3_dummy_hit")
+}],
+"loop": 1,
+"name": &"hit",
+"speed": 5.0
+}, {
+"frames": [{
+"duration": 1.0,
+"texture": ExtResource("2_dummy_idle")
+}],
+"loop": 1,
+"name": &"idle",
+"speed": 5.0
+}]
+
+[sub_resource type="RectangleShape2D" id="RectangleShape2D_body"]
+size = Vector2(14, 28)
+
+[sub_resource type="RectangleShape2D" id="RectangleShape2D_hurtbox"]
+size = Vector2(18, 28)
+
+[sub_resource type="RectangleShape2D" id="RectangleShape2D_hitbox"]
+size = Vector2(16, 22)
+
+[node name="TrainingDummy" type="CharacterBody2D" node_paths=PackedStringArray("animated_sprite", "health_component", "hurtbox", "hitbox")]
+collision_layer = 0
+collision_mask = 1
+script = ExtResource("1_dummy_script")
+animated_sprite = NodePath("AnimatedSprite")
+health_component = NodePath("HealthComponent")
+hurtbox = NodePath("Hurtbox")
+hitbox = NodePath("Hitbox")
+
+[node name="AnimatedSprite" type="AnimatedSprite2D" parent="."]
+sprite_frames = SubResource("SpriteFrames_dummy")
+animation = &"idle"
+
+[node name="CollisionShape" type="CollisionShape2D" parent="."]
+position = Vector2(0, 2)
+shape = SubResource("RectangleShape2D_body")
+
+[node name="HealthComponent" type="Node" parent="."]
+script = ExtResource("4_health")
+max_health = 3
+invincibility_duration = 0.25
+
+[node name="Hurtbox" type="Area2D" parent="." node_paths=PackedStringArray("health_component")]
+collision_layer = 16
+collision_mask = 0
+monitoring = false
+script = ExtResource("5_hurtbox")
+health_component = NodePath("../HealthComponent")
+
+[node name="CollisionShape2D" type="CollisionShape2D" parent="Hurtbox"]
+position = Vector2(0, 2)
+shape = SubResource("RectangleShape2D_hurtbox")
+debug_color = Color(0.2, 0.8, 0.3, 0.42)
+
+[node name="Hitbox" type="Area2D" parent="." node_paths=PackedStringArray("collision_shape")]
+collision_layer = 0
+collision_mask = 8
+script = ExtResource("6_hitbox")
+damage = 1
+knockback_force = 220.0
+knockback_up_force = 180.0
+collision_shape = NodePath("CollisionShape2D")
+
+[node name="CollisionShape2D" type="CollisionShape2D" parent="Hitbox"]
+position = Vector2(0, 2)
+shape = SubResource("RectangleShape2D_hitbox")
+debug_color = Color(0.95, 0.2, 0.25, 0.42)
+
+[node name="HealthBar" type="TextureProgressBar" parent="." node_paths=PackedStringArray("health_component")]
+offset_left = -16.0
+offset_top = -22.0
+offset_right = 80.0
+offset_bottom = -6.0
+scale = Vector2(0.333, 0.333)
+mouse_filter = 2
+step = 0.01
+value = 100.0
+texture_under = ExtResource("7_bar_under")
+texture_over = ExtResource("8_bar_over")
+texture_progress = ExtResource("9_bar_prog")
+texture_progress_offset = Vector2(3, 3)
+script = ExtResource("10_health_bar")
+health_component = NodePath("../HealthComponent")

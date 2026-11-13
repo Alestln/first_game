@@ -13,6 +13,7 @@
 [ext_resource type="Script" uid="uid://4xkw0h0mubj" path="res://Scripts/camera_frame.gd" id="11_frame"]
 [ext_resource type="PackedScene" path="res://scenes/hud.tscn" id="12_hud"]
 [ext_resource type="PackedScene" path="res://scenes/damage_zone.tscn" id="13_damage_zone"]
+[ext_resource type="PackedScene" uid="uid://c7dmyscene001" path="res://scenes/training_dummy.tscn" id="14_training_dummy"]
 
 [sub_resource type="TileSetAtlasSource" id="TileSetAtlasSource_5a7ea"]
 texture = ExtResource("1_go701")
@@ -126,6 +127,7 @@ sources/1 = SubResource("TileSetAtlasSource_5a7ea")
 [sub_resource type="TileSetScenesCollectionSource" id="TileSetScenesCollectionSource_objects"]
 scenes/1/scene = ExtResource("3_5a7ea")
 scenes/2/scene = ExtResource("13_damage_zone")
+scenes/3/scene = ExtResource("14_training_dummy")
 
 [sub_resource type="TileSet" id="TileSet_objects"]
 sources/0 = SubResource("TileSetScenesCollectionSource_objects")
@@ -251,23 +253,20 @@ health_component = NodePath("../../../../../Player/HealthComponent")
 [node name="CoinLabel" parent="HUD/MarginContainer/TopBar/CoinBox" index="1" node_paths=PackedStringArray("coin_wallet")]
 coin_wallet = NodePath("../../../../../Player/CoinWallet")
 
-[connection signal="body_entered" from="TileMapLayers/Objects/Coin" to="TileMapLayers/Objects/Coin" method="_on_body_entered"]
-[connection signal="body_entered" from="TileMapLayers/Objects/@Area2D@19841" to="TileMapLayers/Objects/@Area2D@19841" method="_on_body_entered"]
-[connection signal="body_entered" from="TileMapLayers/Objects/@Area2D@19842" to="TileMapLayers/Objects/@Area2D@19842" method="_on_body_entered"]
-[connection signal="body_entered" from="TileMapLayers/Objects/@Area2D@19843" to="TileMapLayers/Objects/@Area2D@19843" method="_on_body_entered"]
-[connection signal="body_entered" from="TileMapLayers/Objects/@Area2D@19844" to="TileMapLayers/Objects/@Area2D@19844" method="_on_body_entered"]
-[connection signal="body_entered" from="TileMapLayers/Objects/@Area2D@19845" to="TileMapLayers/Objects/@Area2D@19845" method="_on_body_entered"]
-[connection signal="body_entered" from="TileMapLayers/Objects/@Area2D@19846" to="TileMapLayers/Objects/@Area2D@19846" method="_on_body_entered"]
-[connection signal="body_entered" from="TileMapLayers/Objects/@Area2D@19848" to="TileMapLayers/Objects/@Area2D@19848" method="_on_body_entered"]
-[connection signal="body_entered" from="TileMapLayers/Objects/@Area2D@19849" to="TileMapLayers/Objects/@Area2D@19849" method="_on_body_entered"]
-[connection signal="body_entered" from="TileMapLayers/Objects/@Area2D@19851" to="TileMapLayers/Objects/@Area2D@19851" method="_on_body_entered"]
-[connection signal="body_entered" from="TileMapLayers/Objects/@Area2D@19853" to="TileMapLayers/Objects/@Area2D@19853" method="_on_body_entered"]
-[connection signal="body_entered" from="TileMapLayers/Objects/@Area2D@19854" to="TileMapLayers/Objects/@Area2D@19854" method="_on_body_entered"]
-[connection signal="body_entered" from="TileMapLayers/Objects/@Area2D@19856" to="TileMapLayers/Objects/@Area2D@19856" method="_on_body_entered"]
-[connection signal="body_entered" from="TileMapLayers/Objects/@Area2D@19857" to="TileMapLayers/Objects/@Area2D@19857" method="_on_body_entered"]
-[connection signal="body_entered" from="TileMapLayers/Objects/@Area2D@19858" to="TileMapLayers/Objects/@Area2D@19858" method="_on_body_entered"]
-[connection signal="body_entered" from="TileMapLayers/Objects/@Area2D@19860" to="TileMapLayers/Objects/@Area2D@19860" method="_on_body_entered"]
-[connection signal="body_entered" from="TileMapLayers/Objects/@Area2D@19861" to="TileMapLayers/Objects/@Area2D@19861" method="_on_body_entered"]
+[node name="Dummies" type="Node2D" parent="."]
+
+[node name="TrainingDummy" parent="Dummies" instance=ExtResource("14_training_dummy")]
+position = Vector2(420, 250)
+scale = Vector2(2, 2)
+
+[node name="TrainingDummy2" parent="Dummies" instance=ExtResource("14_training_dummy")]
+position = Vector2(624, 250)
+scale = Vector2(2, 2)
+
+[node name="TrainingDummy3" parent="Dummies" instance=ExtResource("14_training_dummy")]
+position = Vector2(1776, 250)
+scale = Vector2(2, 2)
+
 [connection signal="body_entered" from="CameraRoom" to="CameraRoom" method="_on_body_entered"]
 [connection signal="body_exited" from="CameraRoom" to="CameraRoom" method="_on_body_exited"]
 

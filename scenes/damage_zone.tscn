@@ -1,15 +1,16 @@
 [gd_scene format=3]
 
-[ext_resource type="Script" path="res://scripts/damage_zone.gd" id="1_damage_script"]
-[ext_resource type="Texture2D" path="res://assets/traps/spikes.png" id="2_spikes_tex"]
+[ext_resource type="Script" uid="uid://c7hitbox00001" path="res://scripts/hitbox.gd" id="1_hitbox_script"]
+[ext_resource type="Texture2D" uid="uid://btgtve4vl18kj" path="res://assets/traps/spikes.png" id="2_spikes_tex"]
 
 [sub_resource type="RectangleShape2D" id="RectangleShape2D_spikes"]
 size = Vector2(14, 12)
 
-[node name="DamageZone" type="Area2D"]
+[node name="DamageZone" type="Area2D" node_paths=PackedStringArray("collision_shape")]
 collision_layer = 0
-collision_mask = 2
-script = ExtResource("1_damage_script")
+collision_mask = 24
+script = ExtResource("1_hitbox_script")
+collision_shape = NodePath("CollisionShape2D")
 
 [node name="Sprite2D" type="Sprite2D" parent="."]
 texture = ExtResource("2_spikes_tex")

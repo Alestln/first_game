@@ -5,8 +5,13 @@
 [ext_resource type="Texture2D" uid="uid://cj4l77nlot6qa" path="res://assets/animations/pink_man/idle.png" id="3_fjrip"]
 [ext_resource type="Texture2D" uid="uid://d3odua6nho13i" path="res://assets/animations/pink_man/jump.png" id="4_smehm"]
 [ext_resource type="Texture2D" uid="uid://kywhgjnquktv" path="res://assets/animations/pink_man/run.png" id="5_ur7pv"]
-[ext_resource type="Script" path="res://scripts/health_component.gd" id="6_health"]
-[ext_resource type="Script" path="res://scripts/coin_wallet.gd" id="7_wallet"]
+[ext_resource type="Script" uid="uid://chc0142th8496" path="res://scripts/health_component.gd" id="6_health"]
+[ext_resource type="Script" uid="uid://bm0l77f516vaw" path="res://scripts/coin_wallet.gd" id="7_wallet"]
+[ext_resource type="Texture2D" uid="uid://c7pmanhit0001" path="res://assets/animations/pink_man/hit.png" id="8_hit"]
+[ext_resource type="Texture2D" uid="uid://c7pmanatk0002" path="res://assets/animations/pink_man/attack.png" id="9_attack"]
+[ext_resource type="Texture2D" uid="uid://c7pmansls0003" path="res://assets/animations/pink_man/slash.png" id="10_slash"]
+[ext_resource type="Script" uid="uid://c7hurtbox0001" path="res://scripts/hurtbox.gd" id="11_hurtbox"]
+[ext_resource type="Script" uid="uid://c7hitbox00001" path="res://scripts/hitbox.gd" id="12_hitbox"]
 
 [sub_resource type="AtlasTexture" id="AtlasTexture_y4r1p"]
 atlas = ExtResource("3_fjrip")
@@ -104,10 +109,26 @@ region = Rect2(352, 0, 32, 32)
 animations = [{
 "frames": [{
 "duration": 1.0,
+"texture": ExtResource("9_attack")
+}],
+"loop": 1,
+"name": &"attack",
+"speed": 5.0
+}, {
+"frames": [{
+"duration": 1.0,
 "texture": ExtResource("2_tuyoq")
 }],
 "loop": 1,
 "name": &"fall",
+"speed": 5.0
+}, {
+"frames": [{
+"duration": 1.0,
+"texture": ExtResource("8_hit")
+}],
+"loop": 1,
+"name": &"hit",
 "speed": 5.0
 }, {
 "frames": [{
@@ -201,11 +222,20 @@ animations = [{
 [sub_resource type="RectangleShape2D" id="RectangleShape2D_wwt87"]
 size = Vector2(16, 24)
 
-[node name="Player" type="CharacterBody2D" unique_id=1713449004 node_paths=PackedStringArray("animated_sprite", "coin_wallet")]
+[sub_resource type="RectangleShape2D" id="RectangleShape2D_hurtbox"]
+size = Vector2(12, 20)
+
+[sub_resource type="RectangleShape2D" id="RectangleShape2D_attack"]
+size = Vector2(20, 22)
+
+[node name="Player" type="CharacterBody2D" unique_id=1713449004 node_paths=PackedStringArray("animated_sprite", "coin_wallet", "health_component", "hurtbox", "attack_hitbox")]
 collision_layer = 2
 script = ExtResource("1_qlg0r")
 animated_sprite = NodePath("AnimatedSprite")
 coin_wallet = NodePath("CoinWallet")
+health_component = NodePath("HealthComponent")
+hurtbox = NodePath("Hurtbox")
+attack_hitbox = NodePath("AttackHitbox")
 
 [node name="AnimatedSprite" type="AnimatedSprite2D" parent="." unique_id=1516518533]
 sprite_frames = SubResource("SpriteFrames_0lyci")
@@ -220,3 +250,33 @@ script = ExtResource("6_health")
 
 [node name="CoinWallet" type="Node" parent="."]
 script = ExtResource("7_wallet")
+
+[node name="Hurtbox" type="Area2D" parent="." node_paths=PackedStringArray("health_component")]
+collision_layer = 8
+collision_mask = 0
+monitoring = false
+script = ExtResource("11_hurtbox")
+health_component = NodePath("../HealthComponent")
+
+[node name="CollisionShape2D" type="CollisionShape2D" parent="Hurtbox"]
+position = Vector2(0, 4)
+shape = SubResource("RectangleShape2D_hurtbox")
+debug_color = Color(0.2, 0.8, 0.3, 0.42)
+
+[node name="AttackHitbox" type="Area2D" parent="." node_paths=PackedStringArray("collision_shape")]
+collision_layer = 0
+collision_mask = 16
+script = ExtResource("12_hitbox")
+knockback_force = 240.0
+knockback_up_force = 170.0
+active_by_default = false
+collision_shape = NodePath("CollisionShape2D")
+
+[node name="SlashSprite" type="Sprite2D" parent="AttackHitbox"]
+position = Vector2(18, 2)
+texture = ExtResource("10_slash")
+
+[node name="CollisionShape2D" type="CollisionShape2D" parent="AttackHitbox"]
+position = Vector2(18, 2)
+shape = SubResource("RectangleShape2D_attack")
+debug_color = Color(0.95, 0.2, 0.25, 0.42)
