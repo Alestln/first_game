@@ -252,7 +252,7 @@ script = ExtResource("6_health")
 script = ExtResource("7_wallet")
 
 [node name="Hurtbox" type="Area2D" parent="." node_paths=PackedStringArray("health_component")]
-collision_layer = 8
+collision_layer = 2
 collision_mask = 0
 monitoring = false
 script = ExtResource("11_hurtbox")
@@ -265,7 +265,7 @@ debug_color = Color(0.2, 0.8, 0.3, 0.42)
 
 [node name="AttackHitbox" type="Area2D" parent="." node_paths=PackedStringArray("collision_shape")]
 collision_layer = 0
-collision_mask = 16
+collision_mask = 8
 script = ExtResource("12_hitbox")
 knockback_force = 240.0
 knockback_up_force = 170.0

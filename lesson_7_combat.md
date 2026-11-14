@@ -13,7 +13,7 @@
 Рекомендуемая разбивка занятия на контрольные этапы (если ученик отстал или нужно быстро показать готовый шаг):
 
 ```bash
-git checkout step-1-layers-and-input   # Шаг 1: Слои физики (Player/Enemy Hurtbox) и кнопка атаки (Input Map)
+git checkout step-1-layers-and-input   # Шаг 1: Слои физики (Player / Enemies) и кнопка атаки (Input Map)
 git checkout step-2-hitbox-hurtbox     # Шаг 2: Компоненты Hurtbox и Hitbox + перевод шипов DamageZone на Hitbox
 git checkout step-3-player-knockback   # Шаг 3: Хёртбокс игрока, отталкивание (Knockback), торможение и мигание
 git checkout step-4-melee-attack       # Шаг 4: Атака ближнего боя (AttackHitbox, SlashSprite, таймеры и поворот)
@@ -100,22 +100,30 @@ flowchart LR
 
 #### Настраиваем слои физики в `Project Settings` (LiveCode):
 1. Открываем **Проект (Project) ➔ Настройки проекта (Project Settings) ➔ Имена слоёв (Layer Names) ➔ 2D Физика (2D Physics)**.
-2. К уже знакомым слоям 1–3 добавляем слои **4** и **5**:
+2. К уже знакомым слоям 1–3 добавляем всего один новый слой — **Слой 4 (`Enemies`)**:
    - **Слой 1:** `Environment` *(Земля и стены)*
-   - **Слой 2:** `Player` *(Физическое тело игрока для монет и камер)*
-   - **Слой 3:** `Interactive Objects` *(Монетки)*
-   - **Слой 4:** **`Player Hurtbox`** *(Болевая зона игрока)*
-   - **Слой 5:** **`Enemy Hurtbox`** *(Болевая зона врагов и манекенов)*
+   - **Слой 2:** `Player` *(Игрок: и его физическое тело, и его `Hurtbox`)*
+   - **Слой 3:** `Interactive Objects` *(Монетки и интерактивные предметы)*
+   - **Слой 4:** **`Enemies`** *(Враги и манекены: и их физические тела, и их `Hurtbox`)*
 
-Посмотрите, какая красивая таблица правил получается:
+> **Важный архитектурный вопрос (почему не нужны отдельные слои под `Hurtbox`?):**  
+> В Godot `Area2D` строго разделяет проверку физических тел (`body_entered` / `get_overlapping_bodies()` — видит только `CharacterBody2D`, `StaticBody2D`) и других зон (`area_entered` / `get_overlapping_areas()` — видит только `Area2D`).  
+> Поэтому:
+> - Монетки и триггеры камер слушают `body_entered` на **Слое 2 (`Player`)** — они реагируют только на `CharacterBody2D` игрока и полностью игнорируют его `Hurtbox` (`Area2D`).
+> - Оружие `Hitbox` проверяет `get_overlapping_areas()` и отбирает `if area is Hurtbox` — оно видит только `Hurtbox` на целевом слое и полностью игнорирует `CharacterBody2D`.
+> - А на Занятии 8 лучи зрения врага (`RayCast2D`) смогут искать игрока на том же **Слое 2 (`Player`)** без раздувания таблицы слоёв!
+
+Посмотрите, какая чистая таблица правил получается:
 
 | Узел | `Collision Layer` («Кто я?») | `Collision Mask` («Кого я ищу?») | Как это работает в игре |
 | :--- | :---: | :---: | :--- |
-| **🟢 `Player/Hurtbox`** | **Слой 4** (`Player Hurtbox`) | *Пусто* (`0`) | Просто мишень игрока. Сама ни за кем не следит. |
-| **🟢 `TrainingDummy/Hurtbox`** | **Слой 5** (`Enemy Hurtbox`) | *Пусто* (`0`) | Мишень врага/манекена. |
-| **🔴 `Player/AttackHitbox`** (Меч) | *Пусто* (`0`) | **Слой 5** (`Enemy Hurtbox`) | Меч героя видит **только врагов** и в упор не замечает самого героя! |
-| **🔴 `TrainingDummy/Hitbox`** (Шипы манекена) | *Пусто* (`0`) | **Слой 4** (`Player Hurtbox`) | Враг бьёт **только игрока**, не задевая себя и других врагов. |
-| **🔴 `DamageZone`** (Шипы на полу) | *Пусто* (`0`) | **Слои 4 и 5** (`Player` + `Enemy`) | Ловушке всё равно, кто на неё упал: если мы столкнём врага мечом на шипы — шипы ранят и его! |
+| **🔵 `Player` (`CharacterBody2D`)** | **Слой 2** (`Player`) | **Слой 1** (`Environment`) | Стоит на земле, подбирает монеты, активирует камеры. |
+| **🟢 `Player/Hurtbox`** (`Area2D`) | **Слой 2** (`Player`) | *Пусто* (`0`) | Мишень игрока. Сама ни за кем не следит. |
+| **🔵 `TrainingDummy` (`CharacterBody2D`)** | **Слой 4** (`Enemies`) | **Слой 1** (`Environment`) | Стоит на земле, не блокирует игрока как стена. |
+| **🟢 `TrainingDummy/Hurtbox`** (`Area2D`) | **Слой 4** (`Enemies`) | *Пусто* (`0`) | Мишень врага/манекена. |
+| **🔴 `Player/AttackHitbox`** (Меч) | *Пусто* (`0`) | **Слой 4** (`Enemies`) | Меч героя бьёт **только врагов** и не замечает самого героя! |
+| **🔴 `TrainingDummy/Hitbox`** (Шипы манекена) | *Пусто* (`0`) | **Слой 2** (`Player`) | Враг бьёт **только игрока**, не задевая себя и других врагов. |
+| **🔴 `DamageZone`** (Шипы на полу) | *Пусто* (`0`) | **Слой 2** (`Player`) *(или `2 + 4`)* | По умолчанию шипы бьют только игрока, а если включить в `Mask` ещё и Слой 4 (`Enemies`) — будут бить и столкнутых на них врагов! |
 
 ---
 
@@ -212,19 +220,24 @@ extends Area2D
 signal hit_received(knockback: Vector2)
 
 @export var health_component: HealthComponent
+@export var receive_knockback: bool = true
 
 func _ready() -> void:
 	assert(health_component != null, "%s: 'health_component' обязателен для работы!" % name)
 
 func take_hit(damage: int, knockback: Vector2) -> void:
-	if health_component.take_damage(damage):
-		hit_received.emit(knockback)
+	if not health_component.take_damage(damage):
+		return
+	
+	var final_knockback: Vector2 = knockback if receive_knockback else Vector2.ZERO
+	hit_received.emit(final_knockback)
 ```
 
-**Разбор кода (всего 13 строк!):**
+**Разбор кода:**
 - `Hurtbox` — идеальный пример **Принципа единой ответственности**: он не двигает персонажа, не крутит анимации и не считает таймеры.
 - Когда в него прилетает вызов `take_hit(damage, knockback)` от любого `Hitbox`, он передаёт урон в `health_component.take_damage(damage)`.
-- И **только если** `take_damage` вернул `true`, `Hurtbox` трубит сигнал `hit_received.emit(knockback)` своему владельцу (`Player` или `TrainingDummy`)!
+- И **только если** `take_damage` вернул `true`, `Hurtbox` трубит сигнал `hit_received.emit(final_knockback)` своему владельцу (`Player` или `TrainingDummy`).
+- **Гибкое управление отталкиванием (`@export var receive_knockback: bool = true`):** если в будущем мы сделаем тяжёлого босса, каменную турель или сундук, который должен получать урон, мигать, но **не отлетать** от ударов — достаточно снять галочку `Receive Knockback = false` в Инспекторе `Hurtbox` без единой правки кода!
 
 ---
 
@@ -235,10 +248,10 @@ func take_hit(damage: int, knockback: Vector2) -> void:
 > **Объяснение алгоритма на доске / экране:**  
 > *«Как понять, в какую сторону оттолкнуть цель при ударе?  
 > У нас есть координаты центра атакующего (`global_position.x`) и координаты цели (`target_position.x`).  
-> - Если цель находится **правее** нас (`target_position.x >= global_position.x`) — толкаем её **вправо** (`direction_x = +1.0`).  
-> - Если цель находится **левее** нас (`target_position.x < global_position.x`) — толкаем её **влево** (`direction_x = -1.0`).  
+> - Если цель находится **правее** нас (`target_position.x >= global_position.x`) — толкаем её **вправо** (`RIGHT_DIRECTION = +1.0`).  
+> - Если цель находится **левее** нас (`target_position.x < global_position.x`) — толкаем её **влево** (`LEFT_DIRECTION = -1.0`).  
 >   
-> **Хитрый вопрос классу:** Почему мы пишем `direction_x = -1.0 if target_position.x < global_position.x else 1.0`, а не стандартную функцию знака `sign(target_position.x - global_position.x)`?  
+> **Хитрый вопрос классу:** Почему мы пишем `direction_x = LEFT_DIRECTION if target_position.x < global_position.x else RIGHT_DIRECTION`, а не стандартную функцию знака `sign(target_position.x - global_position.x)`?  
 > **Ответ:** Если игрок упадёт сверху ровно в **центральный пиксель** шипа, разница `target_position.x - global_position.x` будет равна `0`! Функция `sign(0)` вернёт `0`, и героя подбросит строго вертикально вверх без смещения вбок — он приземлится обратно на тот же самый шип! А наше условие с `if / else` гарантирует, что направление по горизонтали всегда будет либо `-1.0`, либо `+1.0`!  
 >   
 > **И второй секрет платформеров:** почему мы возвращаем `Vector2(direction_x * knockback_force, -knockback_up_force)` с минусом по оси `Y`?  
@@ -249,6 +262,9 @@ func take_hit(damage: int, knockback: Vector2) -> void:
 ```gdscript
 class_name Hitbox
 extends Area2D
+
+const LEFT_DIRECTION: float = -1.0
+const RIGHT_DIRECTION: float = 1.0
 
 @export var damage: int = 1
 @export var knockback_force: float = 220.0
@@ -264,7 +280,7 @@ func _physics_process(_delta: float) -> void:
 		return
 	
 	for area: Area2D in get_overlapping_areas():
-		if area is Hurtbox:
+		if area is Hurtbox and (owner == null or area.owner != owner):
 			var hurtbox: Hurtbox = area as Hurtbox
 			var knockback: Vector2 = get_knockback_vector(hurtbox.global_position)
 			hurtbox.take_hit(damage, knockback)
@@ -276,13 +292,15 @@ func set_active(active: bool) -> void:
 		collision_shape.set_deferred("disabled", not active)
 
 func get_knockback_vector(target_position: Vector2) -> Vector2:
-	var direction_x: float = -1.0 if target_position.x < global_position.x else 1.0
+	var direction_x: float = LEFT_DIRECTION if target_position.x < global_position.x else RIGHT_DIRECTION
 	return Vector2(direction_x * knockback_force, -knockback_up_force)
 ```
 
-**Зачем нужен метод `set_active(active: bool)` и флаг `active_by_default`?**
-- У **шипов (`DamageZone`)** и **шипастых плеч манекена** галочка `Active By Default = true`: они опасны постоянно.
-- А у **меча игрока (`AttackHitbox`)** мы снимем галочку `Active By Default = false`: в начале игры меч спрятан (`visible = false`), не проверяет столкновения (`monitoring = false`), и даже его коллайдер отключён (`disabled = true`), пока игрок не нажмёт кнопку атаки!
+**Два важных защитных механизма в `Hitbox`:**
+1. **Защита от самострела `(owner == null or area.owner != owner)`:** даже если у двух врагов включён урон друг по другу (Friendly Fire на Слое 4 `Enemies`), `Hitbox` никогда не ударит `Hurtbox`, принадлежащий тому же самому корневому узлу (`owner`)!
+2. **Метод `set_active(active: bool)` и флаг `active_by_default`:**
+   - У **шипов (`DamageZone`)** и **шипастых плеч манекена** галочка `Active By Default = true`: они опасны постоянно.
+   - А у **меча игрока (`AttackHitbox`)** мы снимем галочку `Active By Default = false`: в начале игры меч спрятан (`visible = false`), не проверяет столкновения (`monitoring = false`), и его коллайдер отключён (`disabled = true`), пока игрок не нажмёт кнопку атаки!
 
 ---
 
@@ -294,7 +312,7 @@ func get_knockback_vector(target_position: Vector2) -> Vector2:
    - В слот **`Collision Shape`** назначаем дочерний узел `CollisionShape2D`.
    - В разделе **Collision**:
      - `Layer` — пусто (`0`).
-     - `Mask` — включаем **Слой 4 (`Player Hurtbox`)** и **Слой 5 (`Enemy Hurtbox`)**!
+     - `Mask` — включаем **Слой 2 (`Player`)** (по умолчанию шипы ранят и отталкивают только игрока; а если на какой-то ловушке включить ещё и **Слой 4 (`Enemies`)**, то шипы будут бить и врагов!).
 
 ---
 
@@ -310,7 +328,7 @@ func get_knockback_vector(target_position: Vector2) -> Vector2:
    - В Инспекторе у `Hurtbox` в поле **`Health Component`** назначаем узел `HealthComponent`.
    - В разделе **Monitoring** снимаем галочку **`Monitoring = false`** (мишень сама никого не ищет, экономим ресурсы процессора!).
    - В разделе **Collision**:
-     - `Layer` = **Слой 4 (`Player Hurtbox`)**.
+     - `Layer` = **Слой 2 (`Player`)**.
      - `Mask` = пусто (`0`).
 3. Внутрь `Hurtbox` добавляем **`CollisionShape2D`**:
    - Создаём `New RectangleShape2D` размером **`12 × 20` px** и ставим `Position = Vector2(0, 4)`.
@@ -375,7 +393,7 @@ sequenceDiagram
    - В Инспекторе у `AttackHitbox`:
      - **`Knockback Force = 240.0`**, **`Knockback Up Force = 170.0`**.
      - Снимаем галочку **`Active By Default = false`** (меч включается только в момент удара!).
-     - В разделе **Collision**: `Layer = 0` (пусто), **`Mask` = Слой 5 (`Enemy Hurtbox`)**.
+     - В разделе **Collision**: `Layer = 0` (пусто), **`Mask` = Слой 4 (`Enemies`)**.
 3. Внутрь `AttackHitbox` добавляем два дочерних узла с одинаковым смещением **`Position = Vector2(18, 2)`** (прямо перед героем!):
    - **`SlashSprite` (`Sprite2D`)** — перетаскиваем текстуру **`res://assets/animations/pink_man/slash.png`**.
    - **`CollisionShape2D`** — создаём `New RectangleShape2D` размером **`20 × 22` px** (в `Debug Color` ставим полупрозрачный **красный цвет**).
@@ -397,8 +415,8 @@ sequenceDiagram
 class_name Player
 extends CharacterBody2D
 
-const HIT_FLASH_INTERVAL: float = 0.12
-const HIT_FLASH_ALPHA: float = 0.35
+const FULL_ALPHA: float = 1.0
+const HALF_INTERVAL_FACTOR: float = 0.5
 
 static var instance: Player
 
@@ -408,6 +426,8 @@ static var instance: Player
 @export var attack_cooldown: float = 0.35
 @export var knockback_duration: float = 0.25
 @export var knockback_friction: float = 600.0
+@export var hit_flash_interval: float = 0.12
+@export_range(0.0, 1.0) var hit_flash_alpha: float = 0.35
 
 @export var animated_sprite: AnimatedSprite2D
 @export var coin_wallet: CoinWallet
@@ -525,10 +545,10 @@ func handle_flip(direction: float) -> void:
 	
 	if direction > 0.0:
 		animated_sprite.flip_h = false
-		attack_hitbox.scale.x = 1.0
+		attack_hitbox.scale.x = absf(attack_hitbox.scale.x)
 	elif direction < 0.0:
 		animated_sprite.flip_h = true
-		attack_hitbox.scale.x = -1.0
+		attack_hitbox.scale.x = -absf(attack_hitbox.scale.x)
 
 func update_state(direction: float) -> void:
 	if is_hurt():
@@ -563,7 +583,8 @@ func play_animation() -> void:
 
 func _on_hurtbox_hit_received(knockback: Vector2) -> void:
 	stop_attack()
-	velocity = knockback
+	if knockback != Vector2.ZERO:
+		velocity = knockback
 	_knockback_timer = knockback_duration
 	play_hit_flash()
 
@@ -571,11 +592,15 @@ func play_hit_flash() -> void:
 	if _hit_tween and _hit_tween.is_running():
 		_hit_tween.kill()
 	
-	animated_sprite.modulate.a = 1.0
-	var flash_count: int = maxi(1, int(health_component.invincibility_duration / HIT_FLASH_INTERVAL))
+	animated_sprite.modulate.a = FULL_ALPHA
+	if hit_flash_interval <= 0.0 or health_component.invincibility_duration <= 0.0:
+		return
+	
+	var flash_count: int = maxi(1, int(health_component.invincibility_duration / hit_flash_interval))
+	var half_step: float = hit_flash_interval * HALF_INTERVAL_FACTOR
 	_hit_tween = create_tween().set_loops(flash_count)
-	_hit_tween.tween_property(animated_sprite, "modulate:a", HIT_FLASH_ALPHA, HIT_FLASH_INTERVAL * 0.5)
-	_hit_tween.tween_property(animated_sprite, "modulate:a", 1.0, HIT_FLASH_INTERVAL * 0.5)
+	_hit_tween.tween_property(animated_sprite, "modulate:a", hit_flash_alpha, half_step)
+	_hit_tween.tween_property(animated_sprite, "modulate:a", FULL_ALPHA, half_step)
 
 func _on_died() -> void:
 	get_tree().call_deferred("reload_current_scene")
@@ -610,11 +635,13 @@ func _on_died() -> void:
 class_name TrainingDummy
 extends CharacterBody2D
 
-const HIT_FLASH_INTERVAL: float = 0.1
-const HIT_FLASH_ALPHA: float = 0.4
+const FULL_ALPHA: float = 1.0
+const HALF_INTERVAL_FACTOR: float = 0.5
 
 @export var knockback_duration: float = 0.25
 @export var knockback_friction: float = 650.0
+@export var hit_flash_interval: float = 0.1
+@export_range(0.0, 1.0) var hit_flash_alpha: float = 0.4
 
 @export var animated_sprite: AnimatedSprite2D
 @export var health_component: HealthComponent
@@ -652,7 +679,8 @@ func _physics_process(delta: float) -> void:
 			animated_sprite.play("idle")
 
 func _on_hurtbox_hit_received(knockback: Vector2) -> void:
-	velocity = knockback
+	if knockback != Vector2.ZERO:
+		velocity = knockback
 	if _is_destroyed:
 		return
 	
@@ -663,17 +691,21 @@ func play_hit_flash() -> void:
 	if _hit_tween and _hit_tween.is_running():
 		_hit_tween.kill()
 	
-	animated_sprite.modulate.a = 1.0
-	var flash_count: int = maxi(1, int(health_component.invincibility_duration / HIT_FLASH_INTERVAL))
+	animated_sprite.modulate.a = FULL_ALPHA
+	if hit_flash_interval <= 0.0 or health_component.invincibility_duration <= 0.0:
+		return
+	
+	var flash_count: int = maxi(1, int(health_component.invincibility_duration / hit_flash_interval))
+	var half_step: float = hit_flash_interval * HALF_INTERVAL_FACTOR
 	_hit_tween = create_tween().set_loops(flash_count)
-	_hit_tween.tween_property(animated_sprite, "modulate:a", HIT_FLASH_ALPHA, HIT_FLASH_INTERVAL * 0.5)
-	_hit_tween.tween_property(animated_sprite, "modulate:a", 1.0, HIT_FLASH_INTERVAL * 0.5)
+	_hit_tween.tween_property(animated_sprite, "modulate:a", hit_flash_alpha, half_step)
+	_hit_tween.tween_property(animated_sprite, "modulate:a", FULL_ALPHA, half_step)
 
 func _on_died() -> void:
 	_is_destroyed = true
 	if _hit_tween and _hit_tween.is_running():
 		_hit_tween.kill()
-	animated_sprite.modulate.a = 1.0
+	animated_sprite.modulate.a = FULL_ALPHA
 	
 	hitbox.set_active(false)
 	hurtbox.set_deferred("monitorable", false)
@@ -698,20 +730,20 @@ func _on_died() -> void:
 Посмотрите, как окупается наша компонентная архитектура — мы собираем `TrainingDummy` как конструктор LEGO, используя **те же самые скрипты**, что и у игрока:
 
 ```text
-TrainingDummy (CharacterBody2D)          [скрипт: training_dummy.gd] (Layer = 0, Mask = 1 Environment)
+TrainingDummy (CharacterBody2D)          [скрипт: training_dummy.gd] (Layer = 4 Enemies, Mask = 1 Environment)
 ├── AnimatedSprite (AnimatedSprite2D)    (анимации "idle", "hit" и 5-кадровая "destroy" [Loop = off, 11 FPS])
 ├── CollisionShape (CollisionShape2D)    (RectangleShape2D 14×28 px, Position = (0, 2))
 ├── HealthComponent (Node)               [скрипт: health_component.gd] (Max Health = 3, Invincibility = 0.25)
-├── Hurtbox (Area2D)                     [скрипт: hurtbox.gd] (Layer = 5 Enemy Hurtbox, Mask = 0)
+├── Hurtbox (Area2D)                     [скрипт: hurtbox.gd] (Layer = 4 Enemies, Mask = 0)
 │   └── CollisionShape2D                 (RectangleShape2D 18×28 px, зелёный цвет)
-├── Hitbox (Area2D)                      [скрипт: hitbox.gd] (Layer = 0, Mask = 4 Player Hurtbox)
+├── Hitbox (Area2D)                      [скрипт: hitbox.gd] (Layer = 0, Mask = 2 Player)
 │   └── CollisionShape2D                 (RectangleShape2D 16×22 px, красный цвет)
 └── HealthBar (TextureProgressBar)       [скрипт: health_bar.gd с Занятия 6!] (Scale = (0.333, 0.333), над головой)
 ```
 
 **Два супер-момента, которые нужно показать детям при сборке `training_dummy.tscn`:**
-1. **Почему у самого `TrainingDummy` (`CharacterBody2D`) мы ставим `Collision Layer = 0` и `Collision Mask = 1` (`Environment`)?**  
-   Если бы физическое тело врага/манекена сталкивалось с физическим телом игрока как бетонная стена, игрок мог бы запрыгнуть манекену на голову и стоять на нём как на табуретке! А так физическое тело манекена чувствует только пол и стены (`Environment`), а любое боевое касание с игроком обрабатывается через их `Hitbox` и `Hurtbox`!
+1. **Почему у `TrainingDummy` (`CharacterBody2D`) стоит `Collision Layer = 4` (`Enemies`), а `Collision Mask = 1` (`Environment`)?**  
+   Манекен (и будущие враги на Занятии 8) находится на слое `Enemies`, но в маске его физического тела включён **только пол и стены (`Environment`)**. Если бы физическое тело врага сталкивалось с физическим телом игрока как бетонная стена, игрок мог бы запрыгнуть манекену на голову и стоять на нём как на табуретке! А так физические тела не блокируют друг друга, и любое боевое касание обрабатывается через `Hitbox` и `Hurtbox`!
 2. **Переиспользование `health_bar.gd` с Занятия 6 без единой правки кода!**  
    Мы добавляем `TextureProgressBar` прямо над головой манекена (`Offset = (-16, -22)`, `Scale = (0.333, 0.333)`), вешаем на него `scripts/health_bar.gd` и указываем `HealthComponent` манекена. Полоска здоровья плавно работает над головой врага точно так же, как в экранном `HUD`!
 
@@ -737,10 +769,10 @@ TrainingDummy (CharacterBody2D)          [скрипт: training_dummy.gd] (Laye
 
 | Симптом проблемы | В чём реальная причина | Как исправить |
 | :--- | :--- | :--- |
-| **Герой при взмахе мечом ранит и отталкивает сам себя** | У `AttackHitbox` в `Mask` случайно включили Слой 4 (`Player Hurtbox`). | У `Player/AttackHitbox` оставить в `Mask` **только Слой 5 (`Enemy Hurtbox`)**. |
+| **Герой при взмахе мечом ранит и отталкивает сам себя** | У `AttackHitbox` в `Mask` случайно включили Слой 2 (`Player`). | У `Player/AttackHitbox` оставить в `Mask` **только Слой 4 (`Enemies`)**. |
 | **При получении урона герой подпрыгивает вверх, но совсем не отлетает вбок** | `velocity.x = direction * SPEED` в каждом кадре перезаписывает скорость отскока. | В `handle_movement()` проверять `if is_hurt():` и тормозить через `move_toward(velocity.x, 0.0, knockback_friction * delta)`. |
 | **Меч бьёт врага вплотную, но притягивает его к игроку вместо отталкивания** | Сам узел `AttackHitbox` сдвинули на `(18, 2)` вместо его дочерних узлов, и он оказался позади центра врага. | Держать `AttackHitbox` в центре игрока `(0, 0)`, а смещение `(18, 2)` задавать его детям (`SlashSprite` и `CollisionShape2D`). |
-| **При повороте влево герой смотрит влево, но меч всё равно бьёт вправо** | В `handle_flip()` поворачивается только `animated_sprite.flip_h`, а `attack_hitbox.scale.x` не меняется. | Добавить `attack_hitbox.scale.x = -1.0` при `direction < 0.0` и `1.0` при `direction > 0.0`. |
+| **При повороте влево герой смотрит влево, но меч всё равно бьёт вправо** | В `handle_flip()` поворачивается только `animated_sprite.flip_h`, а `attack_hitbox.scale.x` не меняется. | Менять знак масштаба: `attack_hitbox.scale.x = -absf(attack_hitbox.scale.x)` при `direction < 0.0` и `absf(attack_hitbox.scale.x)` при `direction > 0.0`. |
 | **Волна удара `SlashSprite` видна постоянно с самого старта игры** | У `AttackHitbox` забыли выключить `Active By Default`. | В Инспекторе `Player/AttackHitbox` снять галочку **`Active By Default = false`**. |
 | **Манекен при гибели бесконечно проигрывает взрыв и не исчезает** | У анимации `"destroy"` в `SpriteFrames` осталась включённой петля `Loop`. | Выключить кнопку зацикливания **`Animation Looping` (`Loop = false`)** у анимации `"destroy"`, чтобы сработал `await animated_sprite.animation_finished`. |
 | **Игра выдаёт ошибку при перезагрузке сцены в момент гибели** | `reload_current_scene()` вызвали напрямую во время физического шага `Area2D`. | Вызывать перезагрузку отложенно: `get_tree().call_deferred("reload_current_scene")`. |
@@ -754,7 +786,7 @@ TrainingDummy (CharacterBody2D)          [скрипт: training_dummy.gd] (Laye
 1. **Отскок сверху при ударе в прыжке (*Pogo-jump* как в *Hollow Knight*):**  
    Если игрок бьёт мечом, находясь в воздухе (`not is_on_floor()`), и его `AttackHitbox` успешно попадает по врагу/манекену, слегка подбрасывать самого игрока вверх (`velocity.y = JUMP_VELOCITY * 0.6`). Для этого добавьте в `Hitbox` сигнал `signal hit_landed(hurtbox: Hurtbox)`!
 2. **Разрушаемый деревянный ящик с монетками (`LootCrate`):**  
-   Создать сцену ящика (`StaticBody2D` или `CharacterBody2D`) с `HealthComponent` (`max_health = 2`) и `Hurtbox` (Слой 5 `Enemy Hurtbox`), который при сигнале `died` спавнит на своём месте сцену `coin.tscn` и исчезает!
+   Создать сцену ящика (`StaticBody2D` или `CharacterBody2D`) с `HealthComponent` (`max_health = 2`) и `Hurtbox` (Слой 4 `Enemies`), который при сигнале `died` спавнит на своём месте сцену `coin.tscn` и исчезает!
 3. **Красная вспышка при ранении:**  
    В методе `play_hit_flash()` помимо прозрачности `modulate:a` кратковременно окрашивать спрайт в ярко-розовый/красный оттенок `Color(1.0, 0.4, 0.4)` на первом полушаге `Tween`, возвращая `Color.WHITE` на втором.
 

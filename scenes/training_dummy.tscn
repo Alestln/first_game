@@ -81,7 +81,7 @@ size = Vector2(18, 28)
 size = Vector2(16, 22)
 
 [node name="TrainingDummy" type="CharacterBody2D" node_paths=PackedStringArray("animated_sprite", "health_component", "hurtbox", "hitbox")]
-collision_layer = 0
+collision_layer = 8
 collision_mask = 1
 script = ExtResource("1_dummy_script")
 animated_sprite = NodePath("AnimatedSprite")
@@ -103,7 +103,7 @@ max_health = 3
 invincibility_duration = 0.25
 
 [node name="Hurtbox" type="Area2D" parent="." node_paths=PackedStringArray("health_component")]
-collision_layer = 16
+collision_layer = 8
 collision_mask = 0
 monitoring = false
 script = ExtResource("5_hurtbox")
@@ -116,7 +116,7 @@ debug_color = Color(0.2, 0.8, 0.3, 0.42)
 
 [node name="Hitbox" type="Area2D" parent="." node_paths=PackedStringArray("collision_shape")]
 collision_layer = 0
-collision_mask = 8
+collision_mask = 2
 script = ExtResource("6_hitbox")
 damage = 1
 knockback_force = 220.0
